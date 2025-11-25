@@ -1,0 +1,12 @@
+default:
+  login_folder: "R"
+  login_file: "01_DS_Login.R"
+
+testing:
+  login_folder: "utils/setup"
+  login_file: "01_DSLite_Setup.R"
+
+production:
+  login_folder: "R"
+  login_file: "01_DS_Login.R"
+

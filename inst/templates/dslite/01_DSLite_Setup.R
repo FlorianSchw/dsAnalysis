@@ -5,115 +5,50 @@
 library(tidyverse)
 library(DSI)
 library(dsBaseClient)
-library(dsTidyverseClient)
 library(DSLite)
 
-
 #### Input of mock data rds files
-data_active <- readRDS(file = here::here("utils/mock_data", "ACTIVE_P1_mockdata.rds"))
-data_donald <- readRDS(file = here::here("utils/mock_data", "DONALD_P1_mockdata.rds"))
-data_gini <- readRDS(file = here::here("utils/mock_data", "GINI_P1_mockdata.rds"))
-data_lisa <- readRDS(file = here::here("utils/mock_data", "LISA_P1_mockdata.rds"))
-data_kora_s1 <- readRDS(file = here::here("utils/mock_data", "KORA_S1_P1_mockdata.rds"))
-data_kora_s3 <- readRDS(file = here::here("utils/mock_data", "KORA_S3_P1_mockdata.rds"))
-data_karmen <- readRDS(file = here::here("utils/mock_data", "KARMEN_P1_mockdata.rds"))
+load(file = here::here("utils/mock_data", "CNSIM1.rda"))
+load(file = here::here("utils/mock_data", "CNSIM2.rda"))
+load(file = here::here("utils/mock_data", "CNSIM3.rda"))
 
-#### Re-adjusting the correct class type
-vars_cat <- tibble::tibble(readxl::read_excel(here::here("utils", "P1.xlsx"), sheet = 1)) |> 
-  filter(Type == "categorical") |> 
-  select(name) |> 
-  pull()
-
-vars_cont <- tibble::tibble(readxl::read_excel(here::here("utils", "P1.xlsx"), sheet = 1)) |> 
-  filter(Type == "continuous") |> 
-  select(name) |> 
-  pull()
-
-data_active <- data_active |> 
-  mutate(across(all_of(vars_cat), ~as.factor(.))) |> 
-  mutate(across(all_of(vars_cont), ~as.numeric(.)))
-
-data_donald <- data_donald |> 
-  mutate(across(all_of(vars_cat), ~as.factor(.))) |> 
-  mutate(across(all_of(vars_cont), ~as.numeric(.)))
-
-data_gini <- data_gini |> 
-  mutate(across(all_of(vars_cat), ~as.factor(.))) |> 
-  mutate(across(all_of(vars_cont), ~as.numeric(.)))
-
-data_lisa <- data_lisa |> 
-  mutate(across(all_of(vars_cat), ~as.factor(.))) |> 
-  mutate(across(all_of(vars_cont), ~as.numeric(.)))
-
-data_kora_s1 <- data_kora_s1 |> 
-  mutate(across(all_of(vars_cat), ~as.factor(.))) |> 
-  mutate(across(all_of(vars_cont), ~as.numeric(.)))
-
-data_kora_s3 <- data_kora_s3 |> 
-  mutate(across(all_of(vars_cat), ~as.factor(.))) |> 
-  mutate(across(all_of(vars_cont), ~as.numeric(.)))
-
-data_karmen <- data_karmen |> 
-  mutate(across(all_of(vars_cat), ~as.factor(.))) |> 
-  mutate(across(all_of(vars_cont), ~as.numeric(.)))
+#### apparently rda files are already sorted for correct class type
 
 
 
 #### Defining the server-side data
-dslite.server <<- DSLite::newDSLiteServer(tables=list(ACTIVE_P1 = data_active,
-                                                      DONALD_P1 = data_donald,
-                                                      GINI_P1 = data_gini,
-                                                      LISA_P1 = data_lisa,
-                                                      KORA_S1_P1 = data_kora_s1,
-                                                      KORA_S3_P1 = data_kora_s3,
-                                                      KARMEN_P1 = data_karmen))
-
+dslite.server <<- DSLite::newDSLiteServer(tables=list(CNSIM1 = study1,
+                                                      CNSIM2 = study2,
+                                                      CNSIM3 = study3))
 
 #### Defining the server-side packages
-dslite.server$config(DSLite::defaultDSConfiguration(include=c("dsBase",
-                                                              "dsTidyverse")))
+dslite.server$config(DSLite::defaultDSConfiguration(include=c("dsBase")))
 dslite.server$profile()
-dslite.server$aggregateMethod("dsListDisclosureSettings", "dsTidyverse::dsListDisclosureSettings")
+dslite.server$aggregateMethod("dsListDisclosureSettings")
 
 
 #### Building the different DSLite Servers
-logindata.dslite.data <- data.frame(server = c("ACTIVE_P1", 
-                                               "DONALD_P1", 
-                                               "GINI_P1", 
-                                               "LISA_P1",
-                                               "KORA_S1_P1",
-                                               "KORA_S3_P1",
-                                               "KARMEN_P1"),
-                                    url = c("dslite.server", 
-                                            "dslite.server", 
-                                            "dslite.server", 
-                                            "dslite.server",
-                                            "dslite.server",
+logindata.dslite.data <- data.frame(server = c("DEMO_OBIBA_1",
+                                               "DEMO_OBIBA_2",
+                                               "DEMO_OBIBA_3"),
+                                    url = c("dslite.server",
                                             "dslite.server",
                                             "dslite.server"),
                                     user = "",
                                     password = "",
-                                    table = c("ACTIVE_P1", 
-                                              "DONALD_P1", 
-                                              "GINI_P1", 
-                                              "LISA_P1",
-                                              "KORA_S1_P1",
-                                              "KORA_S3_P1",
-                                              "KARMEN_P1"),
+                                    table = c("CNSIM1",
+                                              "CNSIM2",
+                                              "CNSIM3"),
                                     options = list(datashield.privacyControlLevel = "permissive"),
-                                    driver = c("DSLiteDriver", 
-                                               "DSLiteDriver", 
-                                               "DSLiteDriver", 
-                                               "DSLiteDriver",
-                                               "DSLiteDriver",
+                                    driver = c("DSLiteDriver",
                                                "DSLiteDriver",
                                                "DSLiteDriver"))
 
 
 #### Login to the different DSLite Servers
-connections <<- DSI::datashield.login(logindata.dslite.data, 
-                                assign=TRUE, 
+conns <<- DSI::datashield.login(logindata.dslite.data,
+                                assign=TRUE,
                                 symbol = "D")
 
 #### Cleaning the environment
-rm(list = setdiff(ls(), "connections"))
+rm(list = setdiff(ls(), "conns"))

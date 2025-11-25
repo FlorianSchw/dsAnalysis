@@ -12,10 +12,6 @@
 #'
 
 
-
-
-
-
 initProject <- function(location = NULL,
                         initiate_git = FALSE){
 
@@ -54,10 +50,22 @@ initProject <- function(location = NULL,
             to = paste0(location, "/utils/setup/01_DSLite_Setup.R"))
 
 
+  #### copies over initial config.yml file
+  file.copy(from = find_script("utils/config.yml"),
+            to = paste0(location, "/config.yml"))
+
+  #### copies over dependencies file for renv
+  file.copy(from = find_script("utils/dependencies.R"),
+            to = paste0(location, "/dependencies.R"))
+
+
   #### modify .gitignore file
-  gitignore_lines <- c(".Renviron",
+  gitignore_lines <- c("",
+                       ".Renviron",
+                       "",
                        "results/plots/*",
                        "!results/plots/placeholder.txt",
+                       "",
                        "results/tables/*",
                        "!results/tables/placeholder.txt")
 
@@ -65,16 +73,39 @@ initProject <- function(location = NULL,
                        lines = gitignore_lines)
 
 
-  ## Opal_DataDictionary.xlsx
-  ## mock_data
-  #### mock data files
+  #### initiate and fill standard .Renviron file
+
+  r_environ_lines <- c("R_CONFIG_ACTIVE = 'production'",
+                       "",
+                       "OBIBA1_URL = 'https://opal-demo.obiba.org/'",
+                       "OBIBA1_USER = 'dsuser'",
+                       "OBIBA1_PWD = 'P@ssw0rd'",
+                       "OBIBA1_TABLE = 'CNSIM.CNSIM1'",
+                       "OBIBA2_URL = 'https://opal-demo.obiba.org/'",
+                       "OBIBA2_USER = 'dsuser'",
+                       "OBIBA2_PWD = 'P@ssw0rd'",
+                       "OBIBA2_TABLE = 'CNSIM.CNSIM2'",
+                       "OBIBA3_URL = 'https://opal-demo.obiba.org/'",
+                       "OBIBA3_USER = 'dsuser'",
+                       "OBIBA3_PWD = 'P@ssw0rd'",
+                       "OBIBA3_TABLE = 'CNSIM.CNSIM3'")
+
+  usethis::write_over(path = paste0(location, "/.Renviron"),
+                      lines = r_environ_lines)
 
 
+  download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM1.rda",
+                destfile = paste0(location, "/utils/mock_data/CNSIM1.rda"))
+  download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM2.rda",
+                destfile = paste0(location, "/utils/mock_data/CNSIM2.rda"))
+  download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM3.rda",
+                destfile = paste0(location, "/utils/mock_data/CNSIM3.rda"))
 
-  #### .Renviron file with project scope setup
-
+  renv::install("datashield/dsBaseClient")
 
   renv::init(project = location)
+
+
 
 
 }
