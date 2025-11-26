@@ -7,7 +7,8 @@ Description: Creates DataSHIELD analysis project environments via pre-defined sc
 License: use_gpl3_license()
 Depends:
     renv,
-    usethis
+    usethis,
+    fs
 Encoding: UTF-8
 Roxygen: list(markdown = FALSE)
 RoxygenNote: 7.3.3
