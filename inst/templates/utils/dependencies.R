@@ -3,4 +3,5 @@
 #### however, we do not want to necessarily load the package then
 #### keeping this library call here makes sure that all packages for both setups are properly installed
 
+library(dsAnalysis)
 library(dsBase)
