@@ -3,16 +3,22 @@ Title: Creates DataSHIELD analysis project environments
 Version: 0.0.0.9000
 Authors@R: 
     person("Florian", "Schwarz", , "Florian.Schwarz@dife.de", role = c("aut", "cre"))
-Description: Creates DataSHIELD analysis project environments via pre-defined scripts. Furthermore, there are multiple other handy operations for this dual env setup.
-License: use_gpl3_license()
+Description: Creates DataSHIELD analysis project environments via pre-defined scripts. 
+    Furthermore, there are multiple other handy operations for this dual env setup.
+License: GPL-3
 Imports:
     renv,
     usethis,
     fs,
-    tidyverse,
+    tibble,
+    dplyr,
+    tidyr,
+    purrr,
+    here,
     remotes,
+    dsBaseClient,
     dsSupportClient
-Remotes: sofiasiamp/dsSupportClient
+Remotes: sofiasiamp/dsSupportClient, datashield/dsBaseClient
 Encoding: UTF-8
 Roxygen: list(markdown = FALSE)
 RoxygenNote: 7.3.3

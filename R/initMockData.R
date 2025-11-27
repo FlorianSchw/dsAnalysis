@@ -2,16 +2,20 @@
 #' @title Function to get mock data from connected data sources
 #' @description The function will create a new DataSHIELD analysis project environment
 #' @details This function adaptssome things.
-#' @param conns specifies the client-side object from DS Login
 #' @return mock data in the utils/mock_data folder
 #' @author Florian Schwarz for the German Institute of Human Nutrition
-#' @import tidyverse
 #' @import dsSupportClient
+#' @import dsBaseClient
+#' @import dplyr
+#' @import tidyr
+#' @import tibble
+#' @import here
+#' @import purrr
 #' @export
 #'
 
 
-initMockdata <- function(conns = conns){
+initMockdata <- function(){
 
   ds_servers <- names(conns)
 

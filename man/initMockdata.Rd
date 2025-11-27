@@ -4,7 +4,7 @@
 \alias{initMockdata}
 \title{Function to get mock data from connected data sources}
 \usage{
-initMockdata(conns = conns)
+initMockdata()
 }
 \arguments{
 \item{conns}{specifies the client-side object from DS Login}
