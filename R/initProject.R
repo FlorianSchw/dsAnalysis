@@ -105,7 +105,6 @@ initProject <- function(location = NULL,
 
   renv::install("datashield/dsBaseClient")
 
-  renv::install("FlorianSchw/dsAnalysis")
 
 
   renv::init(project = location)
