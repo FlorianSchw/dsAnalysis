@@ -15,7 +15,13 @@
 #'
 
 
-initMockdata <- function(){
+initMockdata <- function(folder_name = NULL){
+
+  if(is.null(folder_name)){
+    folder_name <- "MockData_New"
+  }
+
+  dir.create(here::here(paste0("utils/mock_data/", folder_name)))
 
   ds_servers <- names(conns)
 
