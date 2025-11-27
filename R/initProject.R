@@ -8,6 +8,7 @@
 #' @author Florian Schwarz for the German Institute of Human Nutrition
 #' @import renv
 #' @import usethis
+#' @importFrom utils download.file
 #' @export
 #'
 

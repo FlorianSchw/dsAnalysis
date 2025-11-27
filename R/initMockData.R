@@ -10,7 +10,7 @@
 #' @import tidyr
 #' @import tibble
 #' @import here
-#' @import purrr
+#' @importFrom purrr map map2
 #' @export
 #'
 

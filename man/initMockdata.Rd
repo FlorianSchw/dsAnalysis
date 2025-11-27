@@ -6,9 +6,6 @@
 \usage{
 initMockdata()
 }
-\arguments{
-\item{conns}{specifies the client-side object from DS Login}
-}
 \value{
 mock data in the utils/mock_data folder
 }
