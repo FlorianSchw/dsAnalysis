@@ -4,7 +4,10 @@
 \alias{initMockdata}
 \title{Function to get mock data from connected data sources}
 \usage{
-initMockdata()
+initMockdata(folder_name = NULL)
+}
+\arguments{
+\item{folder_name}{folder where the mock data shall be stored}
 }
 \value{
 mock data in the utils/mock_data folder

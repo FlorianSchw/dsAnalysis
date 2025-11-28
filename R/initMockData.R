@@ -4,6 +4,7 @@
 #' @details This function adaptssome things.
 #' @return mock data in the utils/mock_data folder
 #' @author Florian Schwarz for the German Institute of Human Nutrition
+#' @param folder_name folder where the mock data shall be stored
 #' @import dsSupportClient
 #' @import dsBaseClient
 #' @import dplyr
@@ -190,7 +191,7 @@ initMockdata <- function(folder_name = NULL){
            value = df1)
 
     save(list = ds_servers[w],
-         file = here::here("utils/mock_data", paste0(ds_servers[w], ".rda")))
+         file = here::here(paste0("utils/mock_data/", folder_name), paste0(ds_servers[w], ".rda")))
 
   }
 

@@ -9,9 +9,9 @@ library(dsBaseClient)
 library(DSLite)
 
 #### Step 2: Import of mock data files
-load(file = here::here("utils/mock_data", "CNSIM1.rda"))
-load(file = here::here("utils/mock_data", "CNSIM2.rda"))
-load(file = here::here("utils/mock_data", "CNSIM3.rda"))
+load(file = here::here("utils/mock_data/demo_obiba", "CNSIM1.rda"))
+load(file = here::here("utils/mock_data/demo_obiba", "CNSIM2.rda"))
+load(file = here::here("utils/mock_data/demo_obiba", "CNSIM3.rda"))
 
 #### Step 3: Defining the server-side data in a new dslite server
 dslite.server <<- DSLite::newDSLiteServer(tables=list(CNSIM1 = study1,
@@ -28,16 +28,14 @@ dslite.server$aggregateMethod("dsListDisclosureSettings")
 logindata.dslite.data <- data.frame(server = c("DEMO_OBIBA_1",
                                                "DEMO_OBIBA_2",
                                                "DEMO_OBIBA_3"),
-                                    url = c("dslite.server"),
+                                    url = "dslite.server",
                                     user = "",
                                     password = "",
                                     table = c("CNSIM1",
                                               "CNSIM2",
                                               "CNSIM3"),
                                     options = list(datashield.privacyControlLevel = "permissive"),
-                                    driver = c("DSLiteDriver",
-                                               "DSLiteDriver",
-                                               "DSLiteDriver"))
+                                    driver = "DSLiteDriver")
 
 #### Step 6: Login to the different DSLite Servers
 conns <<- DSI::datashield.login(logindata.dslite.data,

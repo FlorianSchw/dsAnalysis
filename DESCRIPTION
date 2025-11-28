@@ -1,6 +1,6 @@
 Package: dsAnalysis
 Title: Creates DataSHIELD analysis project environments
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: 
     person("Florian", "Schwarz", , "Florian.Schwarz@dife.de", role = c("aut", "cre"))
 Description: Creates DataSHIELD analysis project environments via pre-defined scripts. 
@@ -15,6 +15,7 @@ Imports:
     tidyr,
     purrr,
     here,
+    stringr,
     remotes,
     dsBaseClient,
     dsSupportClient

@@ -26,6 +26,7 @@ initProject <- function(location = NULL,
   dir.create(paste0(location, "/results/figures"))
   dir.create(paste0(location, "/utils"))
   dir.create(paste0(location, "/utils/mock_data"))
+  dir.create(paste0(location, "/utils/mock_data/demo_obiba"))
   dir.create(paste0(location, "/utils/data_dictionary"))
   dir.create(paste0(location, "/utils/setup"))
 
@@ -98,15 +99,13 @@ initProject <- function(location = NULL,
 
 
   download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM1.rda",
-                destfile = paste0(location, "/utils/mock_data/CNSIM1.rda"))
+                destfile = paste0(location, "/utils/mock_data/demo_obiba/CNSIM1.rda"))
   download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM2.rda",
-                destfile = paste0(location, "/utils/mock_data/CNSIM2.rda"))
+                destfile = paste0(location, "/utils/mock_data/demo_obiba/CNSIM2.rda"))
   download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM3.rda",
-                destfile = paste0(location, "/utils/mock_data/CNSIM3.rda"))
+                destfile = paste0(location, "/utils/mock_data/demo_obiba/CNSIM3.rda"))
 
   renv::install("datashield/dsBaseClient")
-
-
 
   renv::init(project = location)
 
