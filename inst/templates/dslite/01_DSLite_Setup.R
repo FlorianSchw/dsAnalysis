@@ -3,10 +3,9 @@
 #### Comment sections are being used as signals for start/stop for easy updates
 
 #### Step 1: Loading necessary libraries
-library(tidyverse)
 library(DSI)
-library(dsBaseClient)
 library(DSLite)
+library(dsBaseClient)
 
 #### Step 2: Import of mock data files
 load(file = here::here("utils/mock_data/demo_obiba", "CNSIM1.rda"))
