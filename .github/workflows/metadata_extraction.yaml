@@ -20,6 +20,6 @@ jobs:
     if: needs.Extract_Information.outputs.output1 == 'true'
     uses: FlorianSchw/dsDemo/.github/workflows/datashield_functions_metadata3.yaml@master
     with:
-      user_name: $GITHUB_ACTOR
-      user_email: ${GITHUB_ACTOR}@users.noreply.github.com
+      user_name: ${{ github.actor }}
+      user_email: ${{ github.actor }}@users.noreply.github.com
     secrets: inherit
