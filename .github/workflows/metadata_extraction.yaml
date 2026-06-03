@@ -13,5 +13,5 @@ on:
 
 jobs:
   Extract_Information:
-    uses: FlorianSchw/dsDemo/.github/workflows/datashield-functions_metadata2.yaml@master
+    uses: FlorianSchw/dsDemo/.github/workflows/datashield_functions_metadata2.yaml@master
 
