@@ -1,0 +1,17 @@
+name: extracting metadata informtion
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - R/*
+
+  pull_request:
+    branches: [main, master]
+    paths:
+      - R/*
+
+jobs:
+  Extract_Information:
+    uses: FlorianSchw/dsDemo/.github/workflows/datashield-functions_metadata2.yaml@master
+
