@@ -14,6 +14,8 @@ on:
 jobs:
   Extract_Information:
     uses: FlorianSchw/dsDemo/.github/workflows/datashield_functions_metadata2.yaml@master
+    outputs:
+      output1: ${{ steps.verify-changed-files.outputs.files_changed }}
   Pushing_Extracted_Information:
     needs: Extract_Information
     if: needs.Extract_Information.outputs.output1 == 'true'
