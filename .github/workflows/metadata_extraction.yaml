@@ -19,5 +19,4 @@ jobs:
     needs: Extract_Information
     if: needs.Extract_Information.outputs.output1 == 'true'
     uses: FlorianSchw/dsDemo/.github/workflows/datashield_functions_metadata3.yaml@master
-      env:
-        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+    secrets: inherit
