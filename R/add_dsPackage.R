@@ -1,5 +1,5 @@
 #'
-#' @title Function to add dsPackages to the 01_DSLite_Setup.R file
+#' @title Function to add dsPackages to the 01_DSLite_Setup.R file XXXX
 #' @description XXX
 #' @details XXXXXXsssddasdsdfsdasdfsaasdsadfsdfsdf
 #' @return adjusted R Script
