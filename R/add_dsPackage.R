@@ -1,7 +1,7 @@
 #'
 #' @title Function to add dsPackages to the 01_DSLite_Setup.R file
 #' @description XXX
-#' @details XXXXXX.
+#' @details XXXXXXsss.
 #' @return adjusted R Script
 #' @author Florian Schwarz for the German Institute of Human Nutrition
 #' @param dsPackage name or names of the DataSHIELD server-side packages to add to DSLite instance
