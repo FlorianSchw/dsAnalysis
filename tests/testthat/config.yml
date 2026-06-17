@@ -1,0 +1,5 @@
+default:
+  test-initialize_project-overwriting: FALSE
+
+github:
+  test-initialize_project-overwriting: TRUE
