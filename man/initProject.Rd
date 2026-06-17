@@ -2,23 +2,26 @@
 % Please edit documentation in R/initProject.R
 \name{initProject}
 \alias{initProject}
-\title{Function to initiate a new project}
+\title{Initiate a new project environment dedicated for DataSHIELD analysis}
 \usage{
-initProject(location = NULL, initiate_git = FALSE)
+initProject(path = "home", name = NULL, switch_to_proj = FALSE)
 }
 \arguments{
-\item{location}{specifies the location where the project shall be installed}
+\item{path}{specifies the path where the project shall be initiated. Defaults to the home folder.}
 
-\item{initiate_git}{XXXX}
+\item{name}{name of the new project}
 }
 \value{
-the path of the script_name
+R Project (not initiated)
 }
 \description{
 The function will create a new DataSHIELD analysis project environment
 }
 \details{
-This function adaptssome things.
+This function creates a new DataSHIELD analysis project environment that has multiple features:
+renv is being used to control R versions for analysis, the .Renviron file in combination with the config.yml files are
+used to switch between a realworld setting connecting to live DataSHIELD servers and a local DSLite environment where testing
+can be done. Folder structure and some initial R scripts are provided as well to assist the start of DataSHIELD analysis.
 }
 \author{
 Florian Schwarz for the German Institute of Human Nutrition

@@ -16,7 +16,7 @@ adjusted R Script
 XXX
 }
 \details{
-XXX.
+XXXXXXsssdddasd.
 }
 \author{
 Florian Schwarz for the German Institute of Human Nutrition
