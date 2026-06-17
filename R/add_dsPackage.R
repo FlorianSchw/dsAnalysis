@@ -1,13 +1,14 @@
 #'
-#' @title Function to add dsPackages to the 01_DSLite_Setup.R file
+#' @title Function to add dsPackages to the 01_DSLite_Setup.R file ABCDDE
 #' @description XXX
-#' @details XXXXXXsssdddasd.
+#' @details XXXXXXsssddasdsdfsdasdfsaasdsadfsdfsdf
 #' @return adjusted R Script
 #' @author Florian Schwarz for the German Institute of Human Nutrition
 #' @param dsPackage name or names of the DataSHIELD server-side packages to add to DSLite instance
 #' @import stringr
 #' @export
 #'
+
 
 add_dsPackage <- function(dsPackage = NULL){
 
