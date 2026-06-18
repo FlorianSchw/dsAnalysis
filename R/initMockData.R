@@ -5,29 +5,54 @@
 #' @return mock data in the utils/mock_data folder
 #' @author Florian Schwarz for the German Institute of Human Nutrition
 #' @param folder_name folder where the mock data shall be stored
+#' @param df data.frame object on the server-side to produce mock data from
+#' @param datasources a list of \code{\link[DSI]{DSConnection-class}} objects obtained after login.
+#' If the \code{datasources} argument is not specified the default set of connections will be
+#' used: see \code{\link[DSI]{datashield.connections_default}}.
 #' @import dsSupportClient
 #' @import dsBaseClient
 #' @import dplyr
 #' @import tidyr
 #' @import tibble
 #' @import here
+#' @import DSOpal
 #' @importFrom purrr map map2
+#' @importFrom methods is
+#' @importFrom DSI datashield.connections_find
 #' @export
 #'
 
-
-initMockdata <- function(folder_name = NULL){
+initMockdata <- function(folder_name = NULL, df = "D", datasources = NULL){
 
   if(is.null(folder_name)){
     folder_name <- "MockData_New"
   }
 
-  dir.create(here::here(paste0("utils/mock_data/", folder_name)))
+  #new_mockdata_path <- here::here(paste0("utils/mock_data/", folder_name))
+  new_mockdata_path <- paste0("./utils/mock_data/", folder_name)
 
-  ds_servers <- names(conns)
+  if (fs::dir_exists(new_mockdata_path)) {
+    stop(paste0("The folder name you have provided would overwrite an existing
+                directory (", new_mockdata_path, "). Setup aborted."),
+         call. = FALSE)
+  }
 
-  vars_missing <- dsSupportClient::ds.wrapper("D", ds_function = ds.numNA)
-  vars_class <- dsSupportClient::ds.wrapper("D", ds_function = ds.class)
+  # look for DS connections
+  if(is.null(datasources)){
+    datasources <- DSI::datashield.connections_find()
+  }
+
+  # ensure datasources is a list of DSConnection-class
+  if(!(is.list(datasources) && all(unlist(lapply(datasources, function(d) {methods::is(d,"DSConnection")}))))){
+    stop("The 'datasources' were expected to be a list of DSConnection-class objects", call.=FALSE)
+  }
+
+  dir.create(new_mockdata_path)
+
+  ds_servers <- names(datasources)
+
+  vars_missing <- dsSupportClient::ds.wrapper(df, ds_function = ds.numNA, datasources = datasources)
+  vars_class <- dsSupportClient::ds.wrapper(df, ds_function = ds.class, datasources = datasources)
 
   vars_columns <- vars_class |>
     tibble::rownames_to_column() |>
@@ -48,7 +73,7 @@ initMockdata <- function(folder_name = NULL){
 
   #### cont vars
 
-  vars_cont_stats <- dsSupportClient::ds.summaryVars("D")
+  vars_cont_stats <- dsSupportClient::ds.summaryVars(df)
 
   all_datasources_length <- c()
   mock_data_cont <- list()
@@ -93,10 +118,10 @@ initMockdata <- function(folder_name = NULL){
 
   count <- 0L
 
-  #### "D" hardcoded for now
+  #### "D" hardcoded replaced
   for (k in 1:length(vars_cat)){
 
-    var_cat_level <- ds.levels(paste0("D$",vars_cat[k]))
+    var_cat_level <- ds.levels(paste0(df, "$",vars_cat[k]))
     names_list <- names(var_cat_level)
     list2 <- cbind(var_cat_level, names_list)
 
@@ -110,7 +135,6 @@ initMockdata <- function(folder_name = NULL){
         mutate(Entries = purrr::map(.x = Levels, .f = ~ rep(x = .x,
                                                             times = ceiling(datasource_length/number_categories)))) |>
         mutate(Variable = vars_cat[k])
-
 
     }
 
@@ -129,8 +153,6 @@ initMockdata <- function(folder_name = NULL){
 
 
   }
-
-
 
 
   var_cat_long <- var_cat_compressed |>

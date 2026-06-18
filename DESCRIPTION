@@ -6,6 +6,8 @@ Authors@R:
 Description: Creates DataSHIELD analysis project environments via pre-defined scripts. 
     Furthermore, there are multiple other handy operations for this dual env setup.
 License: GPL-3
+Depends:
+    R (>= 4.1)
 Imports:
     renv,
     usethis,
@@ -17,8 +19,11 @@ Imports:
     here,
     stringr,
     remotes,
+    DSI,
+    DSOpal,
     dsBaseClient,
-    dsSupportClient
+    dsSupportClient,
+    methods
 Remotes: sofiasiamp/dsSupportClient, datashield/dsBaseClient
 Encoding: UTF-8
 Roxygen: list(markdown = FALSE)
@@ -26,5 +31,7 @@ RoxygenNote: 7.3.3
 URL: https://github.com/FlorianSchw/dsAnalysis
 BugReports: https://github.com/FlorianSchw/dsAnalysis/issues
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    config,
+    rjson
 Config/testthat/edition: 3
