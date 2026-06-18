@@ -4,10 +4,16 @@
 \alias{initMockdata}
 \title{Function to get mock data from connected data sources}
 \usage{
-initMockdata(folder_name = NULL)
+initMockdata(folder_name = NULL, df = "D", datasources = NULL)
 }
 \arguments{
 \item{folder_name}{folder where the mock data shall be stored}
+
+\item{df}{data.frame object on the server-side to produce mock data from}
+
+\item{datasources}{a list of \code{\link[DSI]{DSConnection-class}} objects obtained after login.
+If the \code{datasources} argument is not specified the default set of connections will be
+used: see \code{\link[DSI]{datashield.connections_default}}.}
 }
 \value{
 mock data in the utils/mock_data folder

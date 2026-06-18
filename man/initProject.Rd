@@ -10,6 +10,8 @@ initProject(path = "home", name = NULL, switch_to_proj = FALSE)
 \item{path}{specifies the path where the project shall be initiated. Defaults to the home folder.}
 
 \item{name}{name of the new project}
+
+\item{switch_to_proj}{boolean. Indicates whether to open and switch to the newly created project.}
 }
 \value{
 R Project (not initiated)

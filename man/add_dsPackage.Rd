@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_dsPackage.R
 \name{add_dsPackage}
 \alias{add_dsPackage}
-\title{Function to add dsPackages to the 01_DSLite_Setup.R file}
+\title{Function to add dsPackages to the 01_DSLite_Setup.R file ABCDDE}
 \usage{
 add_dsPackage(dsPackage = NULL)
 }
@@ -16,7 +16,7 @@ adjusted R Script
 XXX
 }
 \details{
-XXXXXXsssdddasd.
+XXXXXXsssddasdsdfsdasdfsaasdsadfsdfsdf
 }
 \author{
 Florian Schwarz for the German Institute of Human Nutrition
