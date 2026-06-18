@@ -1,2 +1,10 @@
 ^dsAnalysis\.Rproj$
 ^\.Rproj\.user$
+^\.github$
+^\.git$
+^LICENSE\.md$
+^package-lock\.json$
+^package\.json$
+^.releaserc\.json$
+^\.Renviron$
+^\.lintr$
