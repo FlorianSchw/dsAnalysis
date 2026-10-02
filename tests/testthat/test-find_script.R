@@ -7,7 +7,7 @@ test_that("find script", {
 
   script_name1 <- "datashield/01_DS_Login.R"
   script_name2 <- "datashield/main.R"
-  script_name3 <- "datashield/99_DSLiteLearning.R"
+  script_name3 <- "utils/placeholder.txt"
   script_name4 <- "dslite/01_DSLite_Setup.R"
   script_name5 <- "utils/config.yml"
   script_name6 <- "utils/dependencies.R"

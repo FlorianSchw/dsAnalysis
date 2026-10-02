@@ -69,12 +69,6 @@ initProject <- function(path = "home",
             to = paste0(new_project_path, "/R/main.R"))
   file.copy(from = find_script("datashield/01_DS_Login.R"),
             to = paste0(new_project_path, "/R/01_DS_Login.R"))
-  file.copy(from = find_script("datashield/02_QualityCheck.R"),
-            to = paste0(new_project_path, "/R/02_QualityCheck.R"))
-  file.copy(from = find_script("datashield/03_DescriptiveStatistics.R"),
-            to = paste0(new_project_path, "/R/03_DescriptiveStatistics.R"))
-  file.copy(from = find_script("datashield/99_DSLiteLearning.R"),
-            to = paste0(new_project_path, "/R/99_DSLiteLearning.R"))
 
   #### copies over placeholder files to keep folder structure in place for GitHub
   #### for folders that should not be shared (e.g. results)

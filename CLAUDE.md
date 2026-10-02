@@ -55,11 +55,11 @@ Cross items out when done instead of deleting them.
    DataSHIELD connections, so their tests run against DSLite. Add
    `DSLite` and `dsBase` to `Suggests`, and `datashield/dsBase` to
    `Remotes` (not on CRAN).
-3. **Outside the repo (the user):** in the Anthropic Console a service
+3. ~~**Outside the repo (the user):** in the Anthropic Console a service
    account for dsAnalysis and one federation rule per workflow (claim
    `job_workflow_ref` naming the workflow file); the repository secrets;
    the GitHub App or "Allow GitHub Actions to create and approve pull
-   requests". See `../package-workflows/docs/claude-setup.qmd` and
+   requests"~~ (done). See `../package-workflows/docs/claude-setup.qmd` and
    `docs/getting-started.qmd`.
 
 Test setup: nothing to change. `tests/testthat/setup.R` reads
@@ -71,7 +71,7 @@ Test setup: nothing to change. `tests/testthat/setup.R` reads
 Checklist from `../package-workflows/dev-notes/analysis-suggest.md`,
 section "What dsAnalysis needs":
 
-4. Remove the placeholders `inst/templates/datashield/02_QualityCheck.R`,
+4. ~~Remove the placeholders~~ (done 2026-10-02) `inst/templates/datashield/02_QualityCheck.R`,
    `03_DescriptiveStatistics.R` and `99_DSLiteLearning.R` (and their
    copying in `initProject()`).
 5. Add a plan template that `initProject()` puts at
