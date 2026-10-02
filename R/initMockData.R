@@ -1,14 +1,13 @@
-#'
-#' @title Function to get mock data from connected data sources
-#' @description The function will create a new DataSHIELD analysis project environment
-#' @details This function adaptssome things.
-#' @return mock data in the utils/mock_data folder
-#' @author Florian Schwarz for the German Institute of Human Nutrition
-#' @param folder_name folder where the mock data shall be stored
-#' @param df data.frame object on the server-side to produce mock data from
+#' @title Generate mock data mirroring a server-side data frame
+#' @description Creates synthetic mock datasets that mimic the structure and summary statistics of a data frame on each connected DataSHIELD server, saving one file per server locally.
+#' @details For each connected server, the function retrieves variable classes, missingness counts and summary statistics via dsSupportClient::ds.wrapper and ds.summaryVars, then simulates continuous variables with stats::rnorm using the observed mean and standard deviation and reconstructs categorical variables by resampling observed factor levels via ds.levels. Missing values are reintroduced to match the original missingness counts, and the result for each server is saved as a separate .rda file using base::save. Data manipulation relies heavily on dplyr, tidyr and purrr/tibble helpers, and the output folder path is built with here::here.
+#' @param folder_name Character string giving the name of the subfolder (under utils/mock_data) to create for the generated mock data; defaults to "MockData_New" when NULL, and the function stops with an error if a folder of that name already exists.
+#' @param df Character string giving the name of the data frame or table on the DataSHIELD servers to base the mock data on (default "D"), not an R data.frame object itself.
 #' @param datasources a list of \code{\link[DSI]{DSConnection-class}} objects obtained after login.
 #' If the \code{datasources} argument is not specified the default set of connections will be
 #' used: see \code{\link[DSI]{datashield.connections_default}}.
+#' @return Invisibly returns the local file path (a character string) of the newly created mock-data folder; as a side effect it creates that folder under here::here("utils/mock_data", folder_name) and writes one .rda file per connected server containing its simulated mock data frame.
+#' @author Florian Schwarz for the German Institute of Human Nutrition
 #' @import dsSupportClient
 #' @import dsBaseClient
 #' @import dplyr
@@ -19,8 +18,34 @@
 #' @importFrom purrr map map2
 #' @importFrom methods is
 #' @importFrom DSI datashield.connections_find
+#' @examples
+#' \dontrun{
+#' require('DSI')
+#' require('DSOpal')
+#' require('dsAnalysis')
+#' 
+#' builder <- DSI::newDSLoginBuilder()
+#' builder$append(server = "study1",
+#'                url = "https://opal-demo.obiba.org/",
+#'                user = "dsuser", password = "P@ssw0rd",
+#'                table = "CNSIM.CNSIM1", driver = "OpalDriver")
+#' builder$append(server = "study2",
+#'                url = "https://opal-demo.obiba.org/",
+#'                user = "dsuser", password = "P@ssw0rd",
+#'                table = "CNSIM.CNSIM2", driver = "OpalDriver")
+#' builder$append(server = "study3",
+#'                url = "https://opal-demo.obiba.org/",
+#'                user = "dsuser", password = "P@ssw0rd",
+#'                table = "CNSIM.CNSIM3", driver = "OpalDriver")
+#' logindata <- builder$build()
+#' connections <- DSI::datashield.login(logins = logindata, assign = TRUE, symbol = "D")
+#' 
+#' mock_folder <- tempfile("MockData")
+#' initMockData(folder_name = basename(mock_folder), df = "D", datasources = connections)
+#' 
+#' datashield.logout(connections)
+#' }
 #' @export
-#'
 
 initMockData <- function(folder_name = NULL, df = "D", datasources = NULL){
 
