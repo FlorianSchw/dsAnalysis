@@ -147,8 +147,8 @@ initProject <- function(path = "home",
   download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM3.rda",
                 destfile = paste0(new_project_path, "/utils/mock_data/demo_obiba/CNSIM3.rda"))
 
-  renv::install("datashield/dsBaseClient")
-  renv::install("sofiasiamp/dsSupportClient")
+  renv::install("dsBaseClient")
+  renv::install("nfdi4health/dsSupportClient")
   renv::install("FlorianSchw/dsAnalysis")
 
 

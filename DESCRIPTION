@@ -24,7 +24,7 @@ Imports:
     dsBaseClient,
     dsSupportClient,
     methods
-Remotes: sofiasiamp/dsSupportClient, datashield/dsBaseClient, datashield/dsBase
+Remotes: nfdi4health/dsSupportClient
 Encoding: UTF-8
 Roxygen: list(markdown = FALSE)
 RoxygenNote: 7.3.3

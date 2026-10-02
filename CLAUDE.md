@@ -137,7 +137,7 @@ the `paths:` settings of `config/analysis-suggest.yml`):
 
 ### E. Later
 
-14. `DESCRIPTION`: CRAN releases instead of
+14. ~~`DESCRIPTION`: CRAN releases instead of~~ (done 2026-10-02: dsBaseClient and dsBase 6.3.5 on CRAN; dsSupportClient moved to nfdi4health/dsSupportClient)
     `Remotes: datashield/dsBaseClient`, once available.
 15. `.github/workflows/metadata_extraction.yaml` calls
     `FlorianSchw/datashield-workflows@master`, which is to be removed —
