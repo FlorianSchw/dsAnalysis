@@ -1,9 +1,61 @@
-test_that("initMockdata writes one mock data file per server, shaped like the server data", {
+test_that("initMockData errors without contacting servers when the target folder already exists", {
+  tmp_proj <- tempfile("mockdata-exists-")
+  dir.create(file.path(tmp_proj, "utils", "mock_data", "MockData_Existing"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  err <- testthat::expect_error(dsAnalysis::initMockData(folder_name = "MockData_Existing"))
+  msg <- stringr::str_squish(stringr::str_replace_all(err$message, "\\n", ""))
+  testthat::expect_equal(msg,
+                         paste0("The folder name you have provided would overwrite an existing directory (",
+                                file.path(tmp_proj, "utils/mock_data", "MockData_Existing"),
+                                "). Setup aborted."))
+  testthat::expect_null(err$call)
+})
+
+test_that("initMockData uses MockData_New as the default folder name in the existing-directory error", {
+  tmp_proj <- tempfile("mockdata-default-")
+  dir.create(file.path(tmp_proj, "utils", "mock_data", "MockData_New"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  err <- testthat::expect_error(dsAnalysis::initMockData())
+  msg <- stringr::str_squish(stringr::str_replace_all(err$message, "\\n", ""))
+  testthat::expect_equal(msg,
+                         paste0("The folder name you have provided would overwrite an existing directory (",
+                                file.path(tmp_proj, "utils/mock_data", "MockData_New"),
+                                "). Setup aborted."))
+})
+
+test_that("initMockData errors when datasources is not a list of DSConnection objects and creates no folder", {
+  tmp_proj <- tempfile("mockdata-badconn-")
+  dir.create(file.path(tmp_proj, "utils", "mock_data"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  err <- testthat::expect_error(dsAnalysis::initMockData(folder_name = "MockData_Bad",
+                                                        datasources = list(server1 = "not_a_connection")))
+  testthat::expect_equal(err$message,
+                         "The 'datasources' were expected to be a list of DSConnection-class objects")
+  testthat::expect_null(err$call)
+  testthat::expect_false(fs::dir_exists(file.path(tmp_proj, "utils/mock_data", "MockData_Bad")))
+})
+
+test_that("initMockData rejects a single non-list datasources argument", {
+  tmp_proj <- tempfile("mockdata-nonlist-")
+  dir.create(file.path(tmp_proj, "utils", "mock_data"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  err <- testthat::expect_error(dsAnalysis::initMockData(folder_name = "MockData_NonList",
+                                                        datasources = 42))
+  testthat::expect_equal(err$message,
+                         "The 'datasources' were expected to be a list of DSConnection-class objects")
+  testthat::expect_false(fs::dir_exists(file.path(tmp_proj, "utils/mock_data", "MockData_NonList")))
+})
+
+test_that("initMockData writes one mock data file per server, shaped like the server data", {
 
   testthat::skip_if_not_installed("DSLite")
   testthat::skip_if_not_installed("dsBase")
 
-  testthat::expect_error(dsAnalysis::initMockdata(datasources = "abc"),
+  testthat::expect_error(dsAnalysis::initMockData(datasources = "abc"),
                          regexp = "The 'datasources' were expected to be a list of DSConnection-class objects")
 
   #### a project folder for the mock data
@@ -31,7 +83,7 @@ test_that("initMockdata writes one mock data file per server, shaped like the se
                                  symbol = "D")
   on.exit(DSI::datashield.logout(conns), add = TRUE)
 
-  mock_path <- dsAnalysis::initMockdata(folder_name = "test-mock-data",
+  mock_path <- dsAnalysis::initMockData(folder_name = "test-mock-data",
                                         df = "D",
                                         datasources = conns)
 
@@ -61,7 +113,7 @@ test_that("initMockdata writes one mock data file per server, shaped like the se
   }
 
   #### a second run would overwrite the folder: it stops
-  testthat::expect_error(dsAnalysis::initMockdata(folder_name = "test-mock-data",
+  testthat::expect_error(dsAnalysis::initMockData(folder_name = "test-mock-data",
                                                   df = "D",
                                                   datasources = conns),
                          regexp = "would overwrite an existing")

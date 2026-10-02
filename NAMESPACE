@@ -2,7 +2,7 @@
 
 export(add_dsPackage)
 export(check_project)
-export(initMockdata)
+export(initMockData)
 export(initProject)
 export(install_dsPackage)
 export(list_dsPackages)

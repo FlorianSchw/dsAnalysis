@@ -22,7 +22,7 @@
 #' @export
 #'
 
-initMockdata <- function(folder_name = NULL, df = "D", datasources = NULL){
+initMockData <- function(folder_name = NULL, df = "D", datasources = NULL){
 
   if(is.null(folder_name)){
     folder_name <- "MockData_New"
