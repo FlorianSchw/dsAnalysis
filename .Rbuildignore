@@ -5,7 +5,6 @@
 ^LICENSE\.md$
 ^package-lock\.json$
 ^package\.json$
-^.releaserc\.json$
 ^\.Renviron$
 ^\.lintr$
 ^CLAUDE\.md$

@@ -21,7 +21,12 @@ reusable workflow `datashield-analysis-suggest.yml` in
 
 - Don't commit or push unless asked; leave changes in the working tree
   for review.
-- The only branch is `main`.
+- Branches: work goes into `dev` (pull requests from feature branches);
+  `main` only gets releases, through a `dev` → `main` pull request
+  (`release-trigger.yml` checks, merges and starts `release-publish.yml`,
+  semantic-release with the shared config from `package-workflows`). The
+  bots' pull requests and sweeps target `dev`. Commits follow
+  Conventional Commits (`commitlint.yml`), since they decide the version.
 - When something depends on `package-workflows`, read the referenced file
   there instead of guessing; its `CLAUDE.md` and `dev-notes/` hold the
   design.
@@ -37,10 +42,10 @@ Cross items out when done instead of deleting them.
    `.github/workflows/test-suggest.yml`~~ (done 2026-10-02), starting from
    `../package-workflows/examples/roxygen-suggest.yml` and
    `../package-workflows/examples/test-suggest.yml`. Adjust:
-   - `pull_request: branches: [main]` (there is no `dev`), with
-     `paths: ['R/**']`;
-   - `with: datashield: true`, `datashield-type: utility`,
-     `sweep-base: main` (a scheduled sweep otherwise looks for `dev`);
+   - `pull_request: branches: [dev]` (changed from `main` on 2026-10-02,
+     when `dev` was added), with `paths: ['R/**']`;
+   - `with: datashield: true`, `datashield-type: utility` (no
+     `sweep-base`: scheduled sweeps use `dev`);
    - permissions `id-token: write`, `contents: write`,
      `pull-requests: write`, `issues: write`;
    - the `keepalive` job from the examples (scheduled workflow);
@@ -144,3 +149,10 @@ the `paths:` settings of `config/analysis-suggest.yml`):
     replace or drop it then.
 16. ~~Optional: `R-CMD-check.yaml` (r-lib's, daily) could become a short~~ (done 2026-10-02)
     caller of `../package-workflows/.github/workflows/r-cmd-check.yml`.
+18. **First release** (`dev` → `main` flow, set up 2026-10-02): remove
+    `dry-run: true` from `.github/workflows/release-publish.yml` once a
+    dry run has shown the expected version. Outside the repo (the user):
+    branch protection for `main` and `dev`, with the GitHub App as bypass
+    actor for the version commit (`../package-workflows/docs/branch-protection.qmd`);
+    the secret `API_TOKEN_GITHUB` of the old release workflows is no
+    longer used.
