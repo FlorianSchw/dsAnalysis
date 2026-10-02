@@ -6,20 +6,41 @@ setup with mock data, `renv`, and a `config.yml` to switch between the
 two. A GitHub workflow can draft starter analysis scripts from an
 analysis plan you write.
 
-## Installation
+## Getting started
 
-``` r
-# install.packages("remotes")
-remotes::install_github("FlorianSchw/dsAnalysis")
-```
+1. **Install dsAnalysis:**
 
-## Creating a project
+   ``` r
+   # install.packages("remotes")
+   remotes::install_github("FlorianSchw/dsAnalysis")
+   ```
 
-``` r
-dsAnalysis::initProject(path = "~/projects", name = "my-analysis")
-```
+2. **Create a project:**
 
-This creates:
+   ``` r
+   dsAnalysis::initProject(path = "~/projects", name = "my-analysis")
+   ```
+
+3. **Fill in `.Renviron`** in the new project with your servers' URLs,
+   users and passwords, and restart R. See
+   [`.Renviron` and credentials](#renviron-and-credentials) — read this
+   before you put the project on GitHub.
+
+4. **Try it locally** in testing mode, without any server: set
+   `R_CONFIG_ACTIVE = 'testing'` in `.Renviron`, restart R and run
+   `R/main.R`. See [Production and testing](#production-and-testing).
+
+5. **Put the project on GitHub** (optional, but needed for the analysis
+   scripts workflow): create a repository and push the project. Check
+   first that `.Renviron` is not among the files to commit.
+
+6. **Set up the analysis scripts workflow** (optional): see
+   [Setup](#setup).
+
+If you'd rather not set this up yourself, or get stuck,
+[open an issue](https://github.com/FlorianSchw/dsAnalysis/issues).
+
+## What a project contains
 
 | Path | What it is |
 |------|------------|
@@ -33,10 +54,42 @@ This creates:
 | `config/analysis-plan.yml` | Your analysis plan, read by the analysis scripts workflow |
 | `.github/workflows/datashield-analysis-suggest.yml` | The analysis scripts workflow |
 | `dependencies.R` | Packages tracked by `renv` |
-| `.Renviron` | Credentials and the active profile; not committed |
+| `.Renviron` | Credentials and the active profile; **never committed** |
+| `README.md` | The project's own README, with these rules for everyone working on it |
 
 Other helpers: `add_dsPackage()` adds a DataSHIELD server package to the
 DSLite setup, `update_MockData()` points it at other mock data.
+
+## `.Renviron` and credentials
+
+`.Renviron` in the project folder holds everything that must not be
+shared:
+
+- the servers' URLs, users and passwords (`OBIBA1_URL`, `OBIBA1_USER`,
+  `OBIBA1_PWD`, …), which `R/01_DS_Login.R` reads with `Sys.getenv()`;
+- `R_CONFIG_ACTIVE`, which decides whether you work on the live servers
+  or in testing mode.
+
+R reads it when it starts: **restart R after every change**.
+
+`initProject()` fills it with the public OBiBa demo servers, so a new
+project works out of the box. Replace them with your own servers.
+
+**Keep credentials out of GitHub:**
+
+- `initProject()` adds `.Renviron` to `.gitignore`, so git never commits
+  it. Don't remove that line and don't force-add the file.
+- Never write a URL with a password, a user name with a password, or a
+  token into `R/01_DS_Login.R` or any other script. Scripts are
+  committed, and the login reads everything from `.Renviron` for exactly
+  that reason.
+- Treat anything you push to GitHub as public, even in a private
+  repository: its history keeps every version. If a password was ever
+  pushed, **change the password** — deleting the file or the commit is
+  not enough.
+- Real data never goes into the project. The only data in it is
+  generated mock data in `utils/mock_data/`, and `results/` is ignored by
+  git except for its placeholders.
 
 ## Production and testing
 
@@ -73,6 +126,11 @@ anything confidential in the plan.
 Your **data, credentials and `R/01_DS_Login.R` are never sent**. The
 scripts are tested on generated mock data only.
 
+The workflow **never needs your server credentials**: it runs in testing
+mode, on DSLite with mock data. Don't put DataSHIELD users or passwords
+into GitHub secrets — the only secrets it needs are the Anthropic ones
+below.
+
 ### Setup
 
 Once per project repository on GitHub:
@@ -97,6 +155,10 @@ Once per project repository on GitHub:
    `APP_PRIVATE_KEY`; then the bot's pull requests also trigger your
    other checks.
 
+No Anthropic account, or not sure about any of this?
+[Open an issue](https://github.com/FlorianSchw/dsAnalysis/issues) and
+we'll set it up with you.
+
 ### Trying the scripts
 
 The bot's pull request adds its mock data to `utils/mock_data/` and
@@ -109,3 +171,8 @@ tested them:
 4. Run `R/main.R`.
 
 Set it back to `'production'` to run the analysis on the live servers.
+
+## Help
+
+Questions, problems, or want help with the setup?
+[Open an issue](https://github.com/FlorianSchw/dsAnalysis/issues).

@@ -221,7 +221,7 @@ Facts behind these items:
     makes the DSLite setup and `dependencies.R` match production
     (uses 21–23), and an optional `profile = "..."` per server in the
     `01_DS_Login.R` template.
-26. **README (here and in the project template):**
+26. ~~**README (here and in the project template):**~~ (done 2026-10-02; template: `inst/templates/utils/README.md`)
     - `.Renviron`: holds server URLs, users, passwords and
       `R_CONFIG_ACTIVE`; `initProject()` puts it in `.gitignore` — never
       remove that or force-add it; restart R after editing.

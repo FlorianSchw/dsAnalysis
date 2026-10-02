@@ -98,6 +98,10 @@ initProject <- function(path = "home",
   file.copy(from = find_script("github/datashield-analysis-suggest.yml"),
             to = paste0(new_project_path, "/.github/workflows/datashield-analysis-suggest.yml"))
 
+  #### copies over the project README (credentials, testing mode, help)
+  file.copy(from = find_script("utils/README.md"),
+            to = paste0(new_project_path, "/README.md"))
+
   #### copies over dependencies file for renv
   file.copy(from = find_script("utils/dependencies.R"),
             to = paste0(new_project_path, "/dependencies.R"))

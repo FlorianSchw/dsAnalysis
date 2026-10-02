@@ -23,6 +23,7 @@ test_that("project setup structure", {
                        "config",
                        "dependencies.R",
                        "R",
+                       "README.md",
                        "renv",
                        "renv.lock",
                        "results",
