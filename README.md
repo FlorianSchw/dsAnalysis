@@ -57,8 +57,46 @@ If you'd rather not set this up yourself, or get stuck,
 | `.Renviron` | Credentials and the active profile; **never committed** |
 | `README.md` | The project's own README, with these rules for everyone working on it |
 
-Other helpers: `add_dsPackage()` adds a DataSHIELD server package to the
-DSLite setup, `update_MockData()` points it at other mock data.
+## DataSHIELD packages
+
+Which DataSHIELD packages exist, and where they come from, is listed in
+the [DataSHIELD package catalogue](https://packages.datashield.org)
+(maintained in
+[FederatedMethods/packages](https://github.com/FederatedMethods/packages)).
+Most of them are on GitHub, not on CRAN. You don't need to know where:
+dsAnalysis looks it up in the catalogue. Run these functions from
+within your project:
+
+``` r
+# browse the catalogue
+list_dsPackages(search = "survival", status = "production")
+
+# install a server package and its client, e.g. in the version your
+# studies' servers run
+install_dsPackage("dsSurvival")
+install_dsPackage("dsSurvival", version = "2.1.3")
+
+# remove it again (uninstall = TRUE also uninstalls it)
+remove_dsPackage("dsSurvival")
+
+# check that the installed packages match the project's renv.lock
+check_project()
+```
+
+`install_dsPackage()` takes care of everything around it: the client
+package that belongs to the server package, the DSLite test setup,
+`dependencies.R`, and `renv.lock`, which records the exact versions so
+that everyone working on the project gets the same ones. You don't need
+to use `renv` yourself; if something gets out of sync (e.g. after
+pulling changes from GitHub), `check_project()` tells you what and offers
+to fix it.
+
+A package that isn't in the catalogue can be installed from its GitHub
+repository: `install_dsPackage("dsMyPackage", source = "owner/repo")`.
+
+Other helpers: `add_dsPackage()` and `remove_dsPackage()` only change the
+DSLite setup and `dependencies.R` (no installing), and
+`update_MockData()` points the DSLite setup at other mock data.
 
 ## `.Renviron` and credentials
 

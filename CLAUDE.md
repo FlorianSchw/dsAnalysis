@@ -207,7 +207,7 @@ Facts behind these items:
     `renv::snapshot()` → `renv::status()` and reports in plain words.
     Plus `check_project()`: runs `renv::status()`, explains what is out
     of sync and offers the fix (`renv::restore()` / `renv::snapshot()`).
-24. **`list_dsPackages(search =, status =)`:** reads the live catalogue
+24. ~~**`list_dsPackages(search =, status =)`:**~~ (done 2026-10-02; column `github_version` = DESCRIPTION on the default branch, can be a development version) reads the live catalogue
     and returns name, description, status, client, CRAN/GitHub source,
     latest version, ending with the `add_dsPackage()` call to run. Same
     lookup as item 21. The README links the catalogue

@@ -44,6 +44,17 @@ project uses. Then run `R/main.R`. Where it logs in depends on
 - `'testing'`: a local DSLite instance with mock data, via
   `utils/setup/01_DSLite_Setup.R`. No server or credentials needed.
 
+## Packages
+
+To use another DataSHIELD package, install it with dsAnalysis rather
+than `install.packages()`: `dsAnalysis::install_dsPackage("dsSurvival")`
+installs the client package too, adds the package to the testing setup
+and records it for everyone in `renv.lock`.
+`dsAnalysis::list_dsPackages()` shows which packages exist. If R
+reports missing or changed packages (e.g. after pulling changes),
+`dsAnalysis::check_project()` explains what is out of sync and offers to
+fix it.
+
 ## Analysis scripts from the plan
 
 `config/analysis-plan.yml` describes the analysis: the studies, the
