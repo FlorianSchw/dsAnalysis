@@ -237,3 +237,16 @@ Facts behind these items:
       GitHub repo, secrets, "Allow GitHub Actions to create and approve
       pull requests"), and for help: open an issue on
       https://github.com/FlorianSchw/dsAnalysis/issues.
+27. **Move the repository to `nfdi4health`** (planned, not before
+    2026-10-02). The GitHub App was installed on `FlorianSchw/dsAnalysis`
+    on 2026-10-02 (the token step had failed with 404: no installation
+    for this repo). After the move, update:
+    - `FlorianSchw/dsAnalysis` in `DESCRIPTION` (URL, BugReports),
+      `README.md`, `inst/templates/utils/README.md` (issue links) and
+      `R/initProject.R` (`renv::install("FlorianSchw/dsAnalysis")`);
+    - `../repo-governance/rulesets/*.targets.json` (owner), and the
+      GitHub App installation (on `nfdi4health` instead of `FlorianSchw`);
+    - the repository secrets (they don't move with a transfer) and the
+      Anthropic federation rules if they name the repository;
+    - the catalogue entry's `github_link` (FederatedMethods/packages).
+    GitHub redirects the old URLs, so nothing breaks at once.
