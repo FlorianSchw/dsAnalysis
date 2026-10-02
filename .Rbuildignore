@@ -8,3 +8,4 @@
 ^.releaserc\.json$
 ^\.Renviron$
 ^\.lintr$
+^CLAUDE\.md$
