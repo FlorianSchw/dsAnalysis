@@ -184,7 +184,7 @@ Facts behind these items:
     `library(<client>)` in a marked block of its own (e.g.
     `#### dsPackages (managed by add_dsPackage)` … `end`), never inside
     the bot's `#### bot-suggest: packages` block.
-20. **`remove_dsPackage()`:** removes the package from step 1
+20. ~~**`remove_dsPackage()`:**~~ (done 2026-10-02; renv part with item 23) removes the package from step 1
     (`library()`) and step 4 (`include=c(...)`) of the DSLite setup and
     from the block in `dependencies.R`; refuses `dsBase`; uninstalling
     optional (`renv::remove()`). Rewrite step 4 by parsing the

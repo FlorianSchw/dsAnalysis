@@ -3,6 +3,7 @@
 export(add_dsPackage)
 export(initMockdata)
 export(initProject)
+export(remove_dsPackage)
 export(update_MockData)
 import(DSOpal)
 import(dplyr)
