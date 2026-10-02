@@ -14,7 +14,8 @@ test_that("project setup structure", {
   file_structure_top <- fs::dir_ls(path = tmp_path_to_proj,
                                    all = TRUE)
 
-  expect_elements <- c(".gitignore",
+  expect_elements <- c(".github",
+                       ".gitignore",
                        ".Renviron",
                        ".Rprofile",
                        "config.yml",
@@ -35,6 +36,7 @@ test_that("project setup structure", {
 
   #### Testing that the analysis plan is in place
   testthat::expect_true(file.exists(paste0(tmp_path_to_proj, "/config/analysis-plan.yml")))
+  testthat::expect_true(file.exists(paste0(tmp_path_to_proj, "/.github/workflows/datashield-analysis-suggest.yml")))
 
 
   #### Testing whether important elements exist in the .gitignore file

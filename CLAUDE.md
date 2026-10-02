@@ -78,7 +78,7 @@ section "What dsAnalysis needs":
    `config/analysis-plan.yml`, from
    `../package-workflows/examples/analysis-plan.yml`, keeping its header
    that the content is sent to the Claude API.
-6. Add the caller `.github/workflows/datashield-analysis-suggest.yml` to
+6. ~~Add the caller `.github/workflows/datashield-analysis-suggest.yml`~~ (done 2026-10-02) to
    the project template, from
    `../package-workflows/examples/datashield-analysis-suggest.yml`.
 7. Optional: empty marked blocks the bot fills —
