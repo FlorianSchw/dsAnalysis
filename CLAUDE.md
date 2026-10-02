@@ -261,7 +261,7 @@ Facts behind these items:
     library is unchanged after `initProject()` (all package versions and install times). Local test
     runs need `GITHUB_PAT` (60 unauthenticated GitHub API calls per hour
     run out after about two full test runs).
-29. ~~**`initMockdata()` ignores `datasources` in places:**~~ (fixed 2026-10-02, with the folder path, the per-server size of categorical values, and a DSLite test with DSLite's CNSIM data instead of the OBiBa demo login)
+29. ~~**`initMockData()` (then `initMockdata()`) ignores `datasources` in places:**~~ (fixed 2026-10-02, with the folder path, the per-server size of categorical values, and a DSLite test with DSLite's CNSIM data instead of the OBiBa demo login)
     `dsSupportClient::ds.summaryVars(df)` (and possibly further calls) are
     made without `datasources = datasources`, so they look for
     connections in the global environment ("Are you logged in to any
