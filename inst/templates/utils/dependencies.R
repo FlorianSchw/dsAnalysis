@@ -5,3 +5,7 @@
 
 library(dsAnalysis)
 library(dsBase)
+
+#### packages needed by the scripts of the datashield-analysis-suggest workflow
+#### bot-suggest: packages (updated by datashield-analysis-suggest)
+#### bot-suggest: packages end

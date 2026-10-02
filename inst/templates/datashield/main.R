@@ -9,7 +9,7 @@ cfg_login_file <- config::get(value = "login_file")
 
 source(here::here(cfg_login_folder, cfg_login_file))
 
-
-
-
-
+#### Step 2: Analysis scripts
+#### the datashield-analysis-suggest workflow lists the scripts from config/analysis-plan.yml here
+#### bot-suggest: scripts (updated by datashield-analysis-suggest)
+#### bot-suggest: scripts end
