@@ -151,8 +151,89 @@ the `paths:` settings of `config/analysis-suggest.yml`):
     caller of `../package-workflows/.github/workflows/r-cmd-check.yml`.
 18. **First release** (`dev` → `main` flow, set up 2026-10-02): remove
     `dry-run: true` from `.github/workflows/release-publish.yml` once a
-    dry run has shown the expected version. Outside the repo (the user):
-    branch protection for `main` and `dev`, with the GitHub App as bypass
-    actor for the version commit (`../package-workflows/docs/branch-protection.qmd`);
-    the secret `API_TOKEN_GITHUB` of the old release workflows is no
-    longer used.
+    dry run has shown the expected version. With no tags, semantic-release
+    starts at `1.0.0`; to start at 0.x, tag `main` as `0.0.0` first (no `v`
+    prefix). Outside the repo (the user): branch protection comes from
+    the rulesets in `../repo-governance/rulesets/` (dsAnalysis added to the
+    targets 2026-10-02; its `RULESET_ADMIN_PAT` must reach the
+    `FlorianSchw` account, not only `nfdi4health`); the secret
+    `API_TOKEN_GITHUB` of the old release workflows is no longer used.
+
+### F. Package management, renv and README (agreed 2026-10-02)
+
+Facts behind these items:
+- The DataSHIELD package catalogue (`https://packages.datashield.org/packages.json`,
+  built from FederatedMethods/packages) lists 72 packages; only 5 are on
+  CRAN, almost all have `input.github_link`; `input.status` is
+  production / development / retired / empty.
+- Client names don't always follow `<server>Client` (`dsMTLBase` ↔
+  `dsMTLClient`, `dsQueryLibrary` ↔ `dsQueryLibraryServer`), repo names
+  can differ from package names (`molgenis/ds-tidyverse` for
+  `dsTidyverse`), and entries can be stale (`sofiasiamp/dsSupportClient`).
+- **The analysis bot loads `R/add_dsPackage.R` and `R/update_MockData.R`
+  on their own** with `sys.source()` from a dsAnalysis checkout
+  (`../package-workflows/R/functions/analysis/update_dslite_setup.R`) and
+  calls `add_dsPackage(missing)`. Anything these two functions call must
+  be defined in the same files, or that list in package-workflows must
+  change together with dsAnalysis. They must also stay usable without
+  network installs in the bot's run (or the bot must opt out).
+- DSI 1.8.0 has `datashield.profiles(conns)`, `datashield.pkg_status(conns)`,
+  and `builder$append(..., profile = )`.
+
+19. **`add_dsPackage()` writes `dependencies.R`:** `library(<server>)` and
+    `library(<client>)` in a marked block of its own (e.g.
+    `#### dsPackages (managed by add_dsPackage)` … `end`), never inside
+    the bot's `#### bot-suggest: packages` block.
+20. **`remove_dsPackage()`:** removes the package from step 1
+    (`library()`) and step 4 (`include=c(...)`) of the DSLite setup and
+    from the block in `dependencies.R`; refuses `dsBase`; uninstalling
+    optional (`renv::remove()`). Rewrite step 4 by parsing the
+    `include=c(...)` list instead of counting lines (cause of item 9).
+21. **Install source from the catalogue:** analysts give only the
+    package name. CRAN if `cran_link` is set, else the catalogue's
+    `github_link` (`owner/repo`) via `renv::install()`; user override with
+    `"owner/repo"`. The client from the catalogue's own entry, not by
+    guessing the name. Fallback when the catalogue can't be reached: say
+    so and accept an explicit `"owner/repo"`. The bot pairs server and
+    client in package-workflows (`client_package_name.R`); keep the two
+    approaches consistent.
+22. **`version` argument:** CRAN archive (`pkg@1.2.3`) for CRAN packages,
+    else the GitHub tag matching the version (tags are `v6.3.2` or
+    `6.3.2` depending on the package: look them up), else stop and list
+    the available versions; `ref =` as an escape hatch (commit or
+    branch). Client and server versions should match the studies'.
+23. **renv handled by the functions:** analysts are not expected to know
+    renv. Every install/remove runs install → `dependencies.R` →
+    `renv::snapshot()` → `renv::status()` and reports in plain words.
+    Plus `check_project()`: runs `renv::status()`, explains what is out
+    of sync and offers the fix (`renv::restore()` / `renv::snapshot()`).
+24. **`list_dsPackages(search =, status =)`:** reads the live catalogue
+    and returns name, description, status, client, CRAN/GitHub source,
+    latest version, ending with the `add_dsPackage()` call to run. Same
+    lookup as item 21. The README links the catalogue
+    (packages.datashield.org, FederatedMethods/packages) and points to
+    this function instead of listing packages.
+25. **DataSHIELD profiles** (bundles of server packages: a Rock cluster
+    in Opal, an image such as `default` / `xenon` in Armadillo; defined
+    by the server admins, no central list): first research what
+    `datashield.profiles()` / `datashield.pkg_status()` return on Opal
+    and Armadillo (demo servers?). Then `sync_dsPackages(conns)`, which
+    makes the DSLite setup and `dependencies.R` match production
+    (uses 21–23), and an optional `profile = "..."` per server in the
+    `01_DS_Login.R` template.
+26. **README (here and in the project template):**
+    - `.Renviron`: holds server URLs, users, passwords and
+      `R_CONFIG_ACTIVE`; `initProject()` puts it in `.gitignore` — never
+      remove that or force-add it; restart R after editing.
+    - Credentials: never in `R/01_DS_Login.R` or any committed file;
+      anything pushed to GitHub counts as public, also in private repos
+      (history keeps it) — if it happens, change the password, deleting
+      the commit isn't enough. Real data never in the repo (only
+      generated mock data in `utils/mock_data/`; `results/` ignored).
+    - The GitHub workflow never needs server credentials (testing mode,
+      DSLite, mock data): no DataSHIELD passwords in GitHub secrets, only
+      the three Anthropic ones.
+    - A step-by-step setup (install, `initProject()`, `.Renviron`,
+      GitHub repo, secrets, "Allow GitHub Actions to create and approve
+      pull requests"), and for help: open an issue on
+      https://github.com/FlorianSchw/dsAnalysis/issues.
