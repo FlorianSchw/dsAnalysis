@@ -1,3 +1,27 @@
+test_that("add_dsPackage leaves the DSLite setup unchanged when all packages are already included", {
+
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+
+  setup_lines_before <- readLines(setup_file)
+
+  testthat::expect_message(dsAnalysis::add_dsPackage(dsPackage = "dsBase"),
+                           "The DataSHIELD package dsBase is already included in the DSLite Setup.")
+  testthat::expect_identical(readLines(setup_file), setup_lines_before)
+
+  #### a new package is still added
+  dsAnalysis::add_dsPackage(dsPackage = "dsSurvival")
+  setup_lines_after <- readLines(setup_file)
+  testthat::expect_true("library(dsSurvivalClient)" %in% setup_lines_after)
+  testthat::expect_true(any(stringr::str_detect(setup_lines_after, "\"dsSurvival\"\\)\\)\\)")))
+
+})
+
 #
 #
 # test_that("project setup structure", {

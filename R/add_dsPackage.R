@@ -72,6 +72,11 @@ add_dsPackage <- function(dsPackage = NULL){
   dsPackage_unique <- dsPackage[dupl_int]
   new_dsPackage_length <- length(dsPackage_unique)
 
+  #### nothing to add when all packages are already included
+  if(new_dsPackage_length == 0){
+    return(invisible(NULL))
+  }
+
   #### block 1
   number_elements <- length(block1)
   block1_new <- block1

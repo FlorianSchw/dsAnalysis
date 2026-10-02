@@ -107,7 +107,7 @@ the `paths:` settings of `config/analysis-suggest.yml`):
 
 ### C. Functions
 
-9. **Bug in `add_dsPackage()`** (`R/add_dsPackage.R`): when every given
+9. ~~**Bug in `add_dsPackage()`**~~ (fixed 2026-10-02: early return) (`R/add_dsPackage.R`): when every given
    package is already present, `new_dsPackage_length` (line ~73) is 0,
    and the `1:new_dsPackage_length` loops (lines ~91, ~112, ~144) run
    for 1 and 0 — they write `library(Client)` and break block 4. It
