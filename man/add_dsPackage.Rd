@@ -4,10 +4,12 @@
 \alias{add_dsPackage}
 \title{Function to add dsPackages to the 01_DSLite_Setup.R file ABCDDE}
 \usage{
-add_dsPackage(dsPackage = NULL)
+add_dsPackage(dsPackage = NULL, client = NULL)
 }
 \arguments{
 \item{dsPackage}{name or names of the DataSHIELD server-side packages to add to DSLite instance}
+
+\item{client}{name or names of the matching client-side packages}
 }
 \value{
 adjusted R Script
