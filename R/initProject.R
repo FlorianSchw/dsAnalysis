@@ -151,14 +151,37 @@ initProject <- function(path = "home",
   download.file(url = "https://github.com/datashield/dsBaseClient/raw/master/tests/testthat/data_files/CNSIM/CNSIM3.rda",
                 destfile = paste0(new_project_path, "/utils/mock_data/demo_obiba/CNSIM3.rda"))
 
-  renv::install("dsBaseClient")
-  renv::install("nfdi4health/dsSupportClient")
-  renv::install("FlorianSchw/dsAnalysis")
-
-
+  #### renv: the packages go into the new project's own library; the library of the
+  #### R session that runs initProject() (the analyst's, or a test run's) stays untouched
   renv::init(project = new_project_path,
-             load = switch_to_proj,
-             restart = switch_to_proj)
+             bare = TRUE,
+             load = FALSE,
+             restart = FALSE)
+
+  project_library <- renv::paths$library(project = new_project_path)
+  dir.create(project_library, recursive = TRUE, showWarnings = FALSE)
+
+  renv::install(c("dsBaseClient",
+                  "nfdi4health/dsSupportClient",
+                  "FlorianSchw/dsAnalysis"),
+                library = project_library,
+                project = new_project_path,
+                prompt = FALSE)
+
+  #### everything else the project's scripts use (DSLite, here, config, grateful, ...)
+  renv::hydrate(library = project_library,
+                project = new_project_path,
+                prompt = FALSE)
+
+  renv::snapshot(project = new_project_path,
+                 library = project_library,
+                 prompt = FALSE)
+
+  if (switch_to_proj) {
+    usethis::proj_activate(new_project_path)
+  }
+
+  invisible(new_project_path)
 
 
 }

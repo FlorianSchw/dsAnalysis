@@ -250,3 +250,22 @@ Facts behind these items:
       Anthropic federation rules if they name the repository;
     - the catalogue entry's `github_link` (FederatedMethods/packages).
     GitHub redirects the old URLs, so nothing breaks at once.
+28. ~~**`initProject()` must not touch the caller's library**~~ (fixed
+    2026-10-02): it installed dsBaseClient, dsSupportClient and
+    dsAnalysis into the active library before `renv::init()`. In CI that
+    replaced the loaded dsBaseClient (6.3.6.9000 from dsSupportClient's
+    `Remotes`) with CRAN's 6.3.5, and `library(dsBaseClient)` in
+    `test-initMockData.R` failed; locally it corrupted `stringi`. Now
+    `renv::init(bare = TRUE)`, then install / `renv::hydrate()` /
+    `renv::snapshot()` into the project library. Checked: the active
+    library is unchanged after `initProject()` (all package versions and install times). Local test
+    runs need `GITHUB_PAT` (60 unauthenticated GitHub API calls per hour
+    run out after about two full test runs).
+29. **`initMockdata()` ignores `datasources` in places:**
+    `dsSupportClient::ds.summaryVars(df)` (and possibly further calls) are
+    made without `datasources = datasources`, so they look for
+    connections in the global environment ("Are you logged in to any
+    server?" in `test-initMockData.R`, line 46, where `conns` is local).
+    `test-initMockData.R` is also still work in progress (uses
+    `error_message` and `cfg_dir_overwrite` without defining them, logs in
+    to opal-demo).
