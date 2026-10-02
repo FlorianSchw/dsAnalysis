@@ -142,5 +142,5 @@ the `paths:` settings of `config/analysis-suggest.yml`):
 15. `.github/workflows/metadata_extraction.yaml` calls
     `FlorianSchw/datashield-workflows@master`, which is to be removed —
     replace or drop it then.
-16. Optional: `R-CMD-check.yaml` (r-lib's, daily) could become a short
+16. ~~Optional: `R-CMD-check.yaml` (r-lib's, daily) could become a short~~ (done 2026-10-02)
     caller of `../package-workflows/.github/workflows/r-cmd-check.yml`.
