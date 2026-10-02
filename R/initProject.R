@@ -63,6 +63,7 @@ initProject <- function(path = "home",
   dir.create(paste0(new_project_path, "/utils/data_dictionary"))
   dir.create(paste0(new_project_path, "/utils/setup"))
   dir.create(paste0(new_project_path, "/citations"))
+  dir.create(paste0(new_project_path, "/config"))
 
   #### copies over standardised R scripts for start
   file.copy(from = find_script("datashield/main.R"),
@@ -85,6 +86,10 @@ initProject <- function(path = "home",
   #### copies over initial config.yml file
   file.copy(from = find_script("utils/config.yml"),
             to = paste0(new_project_path, "/config.yml"))
+
+  #### copies over the analysis plan for the datashield-analysis-suggest workflow
+  file.copy(from = find_script("utils/analysis-plan.yml"),
+            to = paste0(new_project_path, "/config/analysis-plan.yml"))
 
   #### copies over dependencies file for renv
   file.copy(from = find_script("utils/dependencies.R"),

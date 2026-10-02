@@ -74,7 +74,7 @@ section "What dsAnalysis needs":
 4. ~~Remove the placeholders~~ (done 2026-10-02) `inst/templates/datashield/02_QualityCheck.R`,
    `03_DescriptiveStatistics.R` and `99_DSLiteLearning.R` (and their
    copying in `initProject()`).
-5. Add a plan template that `initProject()` puts at
+5. ~~Add a plan template~~ (done 2026-10-02) that `initProject()` puts at
    `config/analysis-plan.yml`, from
    `../package-workflows/examples/analysis-plan.yml`, keeping its header
    that the content is sent to the Claude API.

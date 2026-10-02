@@ -19,6 +19,7 @@ test_that("project setup structure", {
                        ".Rprofile",
                        "config.yml",
                        "citations",
+                       "config",
                        "dependencies.R",
                        "R",
                        "renv",
@@ -31,6 +32,9 @@ test_that("project setup structure", {
 
   testthat::expect_setequal(file_structure_top,
                             expected_paths)
+
+  #### Testing that the analysis plan is in place
+  testthat::expect_true(file.exists(paste0(tmp_path_to_proj, "/config/analysis-plan.yml")))
 
 
   #### Testing whether important elements exist in the .gitignore file
