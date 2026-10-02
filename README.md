@@ -81,6 +81,10 @@ remove_dsPackage("dsSurvival")
 
 # check that the installed packages match the project's renv.lock
 check_project()
+
+# after logging in to the live servers: install the packages (and
+# versions) the servers have, and add them to the DSLite test setup
+sync_dsPackages()
 ```
 
 `install_dsPackage()` takes care of everything around it: the client
@@ -93,6 +97,16 @@ to fix it.
 
 A package that isn't in the catalogue can be installed from its GitHub
 repository: `install_dsPackage("dsMyPackage", source = "owner/repo")`.
+
+**Which packages do the servers have?** The data managers of each study
+decide that. A server can offer several *DataSHIELD profiles*, each a
+set of server packages; without a profile in the login, you get the
+server's default one. `sync_dsPackages()` reads what the servers you
+are logged in to offer, installs the matching packages locally (if the
+servers differ in a version, the lowest, so that it works with all of
+them) and tells you which profiles are in use. To log in with a
+specific profile, add `profile = "<name>"` to the server's
+`builder$append()` call in `R/01_DS_Login.R`.
 
 Other helpers: `add_dsPackage()` and `remove_dsPackage()` only change the
 DSLite setup and `dependencies.R` (no installing), and

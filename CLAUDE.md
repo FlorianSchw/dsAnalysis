@@ -213,7 +213,7 @@ Facts behind these items:
     lookup as item 21. The README links the catalogue
     (packages.datashield.org, FederatedMethods/packages) and points to
     this function instead of listing packages.
-25. **DataSHIELD profiles** (bundles of server packages: a Rock cluster
+25. ~~**DataSHIELD profiles**~~ (done 2026-10-02: `sync_dsPackages()`, profile comment in the login template; `pkg_status()` / `profiles()` tried on DSLite, which answers like a server; not yet tried on a real Opal/Armadillo server) (bundles of server packages: a Rock cluster
     in Opal, an image such as `default` / `xenon` in Armadillo; defined
     by the server admins, no central list): first research what
     `datashield.profiles()` / `datashield.pkg_status()` return on Opal
