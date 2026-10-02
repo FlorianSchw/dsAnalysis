@@ -189,7 +189,7 @@ Facts behind these items:
     from the block in `dependencies.R`; refuses `dsBase`; uninstalling
     optional (`renv::remove()`). Rewrite step 4 by parsing the
     `include=c(...)` list instead of counting lines (cause of item 9).
-21. **Install source from the catalogue:** analysts give only the
+21. ~~**Install source from the catalogue:**~~ (done 2026-10-02; `R/dsPackage_sources.R`) analysts give only the
     package name. CRAN if `cran_link` is set, else the catalogue's
     `github_link` (`owner/repo`) via `renv::install()`; user override with
     `"owner/repo"`. The client from the catalogue's own entry, not by
@@ -197,7 +197,7 @@ Facts behind these items:
     so and accept an explicit `"owner/repo"`. The bot pairs server and
     client in package-workflows (`client_package_name.R`); keep the two
     approaches consistent.
-22. **`version` argument:** CRAN archive (`pkg@1.2.3`) for CRAN packages,
+22. ~~**`version` argument:**~~ (done 2026-10-02; the client gets the server's version if it has that tag, else its latest — dsSurvival server and client versions differ) CRAN archive (`pkg@1.2.3`) for CRAN packages,
     else the GitHub tag matching the version (tags are `v6.3.2` or
     `6.3.2` depending on the package: look them up), else stop and list
     the available versions; `ref =` as an escape hatch (commit or
