@@ -116,7 +116,8 @@ the `paths:` settings of `config/analysis-suggest.yml`):
 10. ~~`update_MockData()` suits CI~~ (checked 2026-10-02, unchanged): pass `table_names` so it doesn't parse
     `01_DS_Login.R`; each `.rda` holds an object named after its server
     (`study1.rda` → `study1`). Keep it that way.
-17. **Citation script** in the project template, as in mepr
+17. ~~**Citation script**~~ (done 2026-10-02; `renv::init()` picks up
+    `grateful` from the script itself, tested via `renv.lock`) in the project template, as in mepr
     (`../mepr/inst/templates/scripts/99_package_citations.R`, copied by
     `../mepr/R/initialize_project.R` to `R/99_package_citations.R`): it
     writes the citations of the packages used into `citations/` with

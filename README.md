@@ -25,6 +25,8 @@ This creates:
 |------|------------|
 | `R/main.R` | Runs the analysis: logs in, then sources the analysis scripts |
 | `R/01_DS_Login.R` | Login to the live DataSHIELD servers (production) |
+| `R/99_DSLiteLearning.R` | Looking at the server-side data in testing mode |
+| `R/99_package_citations.R` | Writes the citations of the packages used to `citations/` (with `grateful`) |
 | `utils/setup/01_DSLite_Setup.R` | Login to a local DSLite instance with mock data (testing) |
 | `utils/mock_data/` | Mock data for DSLite |
 | `config.yml` | The `production` and `testing` profiles |
