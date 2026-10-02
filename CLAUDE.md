@@ -81,7 +81,7 @@ section "What dsAnalysis needs":
 6. ~~Add the caller `.github/workflows/datashield-analysis-suggest.yml`~~ (done 2026-10-02) to
    the project template, from
    `../package-workflows/examples/datashield-analysis-suggest.yml`.
-7. Optional: empty marked blocks the bot fills —
+7. ~~Optional: empty marked blocks the bot fills~~ (done 2026-10-02) —
    - in `main.R`:
      `#### bot-suggest: scripts (updated by datashield-analysis-suggest)`
      … `#### bot-suggest: scripts end`;
@@ -90,7 +90,7 @@ section "What dsAnalysis needs":
      … `#### bot-suggest: packages end`.
    Without them the bot appends its own. The marker texts are the
    `markers:` settings in `../package-workflows/config/analysis-suggest.yml`.
-8. The project's `.gitignore` must not exclude `utils/mock_data/` — the
+8. ~~The project's `.gitignore` must not exclude `utils/mock_data/`~~ (holds, tested 2026-10-02) — the
    bot commits its mock data there.
 
 **Interface — keep stable** (the bot reads and edits these; paths in

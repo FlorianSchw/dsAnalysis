@@ -51,6 +51,18 @@ test_that("project setup structure", {
 
   testthat::expect_true(all(gitignore_lines_expected %in% gitignore_lines_created))
 
+  #### Testing that the mock data is not excluded (the datashield-analysis-suggest workflow commits it)
+  testthat::expect_false(any(stringr::str_detect(gitignore_lines_created, "utils|mock_data|\\.rda")))
+
+  #### Testing that the blocks of the datashield-analysis-suggest workflow are in place
+  main_lines_created <- readLines(con = paste0(tmp_path_to_proj, "/R/main.R"))
+  testthat::expect_true(all(c("#### bot-suggest: scripts (updated by datashield-analysis-suggest)",
+                              "#### bot-suggest: scripts end") %in% main_lines_created))
+
+  dependencies_lines_created <- readLines(con = paste0(tmp_path_to_proj, "/dependencies.R"))
+  testthat::expect_true(all(c("#### bot-suggest: packages (updated by datashield-analysis-suggest)",
+                              "#### bot-suggest: packages end") %in% dependencies_lines_created))
+
   #### Testing whether important elements exist in the .Renviron file
   renviron_lines_expected <- c("R_CONFIG_ACTIVE = 'production'",
                                "OBIBA1_URL = 'https://opal-demo.obiba.org/'",
