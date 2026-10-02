@@ -6,7 +6,7 @@
 library(dsAnalysis)
 library(dsBase)
 
-#### DataSHIELD packages added with add_dsPackage(): server and client per line
+#### DataSHIELD packages added with install_dsPackage() or add_dsPackage(): server and client per line
 #### DataSHIELD packages (managed by add_dsPackage and remove_dsPackage)
 #### DataSHIELD packages end
 

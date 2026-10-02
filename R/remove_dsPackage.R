@@ -2,10 +2,11 @@
 #' @title Removes DataSHIELD packages from the DSLite setup and dependencies.R
 #' @param dsPackage name or names of the DataSHIELD server-side packages to remove
 #' @param client name or names of the matching client-side packages
+#' @param uninstall also uninstall the packages from the project library
 #' @export
 #'
 
-remove_dsPackage <- function(dsPackage = NULL, client = NULL){
+remove_dsPackage <- function(dsPackage = NULL, client = NULL, uninstall = FALSE){
 
   if(is.null(dsPackage)){
     stop("No package name has been given.", call. = FALSE)
@@ -49,6 +50,15 @@ remove_dsPackage <- function(dsPackage = NULL, client = NULL){
   writeLines(text = dslite_setup_codelines, con = setup_file)
 
   dependencies_set_dsPackages(remove = dsPackage)
+
+  #### renv: uninstall if asked, and record that the project no longer uses them
+  project <- here::here()
+
+  if(uninstall){
+    renv::remove(c(dsPackage, client[!is.na(client)]), project = project)
+  }
+
+  renv_record(project)
 
   invisible(dsPackage)
 

@@ -112,20 +112,41 @@ install_spec <- function(package, src, version = NULL, ref = NULL){
     stop("No CRAN or GitHub location is known for ", package, ". Give source = \"owner/repo\".", call. = FALSE)
   }
 
+  #### no version: the latest release (tag), else the default branch
   if(is.null(version)){
-    return(src$repo)
+
+    tags <- tryCatch(github_tags(src$repo), error = function(e) NULL)
+    released <- released_tags(tags)
+
+    if(length(released) == 0){
+      message("No released version of ", package, " found on GitHub; installing its default branch.")
+      return(src$repo)
+    }
+
+    return(paste0(src$repo, "@", released[[1]]))
   }
 
   tags <- github_tags(src$repo)
   tag <- version_tag(version, tags)
 
   if(is.na(tag)){
-    released <- tags[grepl("^v?[0-9]+(\\.[0-9]+)*$", tags)]
     stop("Version ", version, " of ", package, " was not found on GitHub (", src$repo, "). ",
-         "Available versions: ", paste(sub("^v", "", released), collapse = ", "), call. = FALSE)
+         "Available versions: ", paste(sub("^v", "", released_tags(tags)), collapse = ", "), call. = FALSE)
   }
 
   paste0(src$repo, "@", tag)
+}
+
+#### the release tags (1.2.3 or v1.2.3, no release candidates), newest first
+released_tags <- function(tags){
+
+  released <- tags[grepl("^v?[0-9]+(\\.[0-9]+)+$", tags)]
+
+  if(length(released) == 0){
+    return(character(0))
+  }
+
+  released[order(numeric_version(sub("^v", "", released)), decreasing = TRUE)]
 }
 
 #### what to install for a DataSHIELD package: the server and the client package,

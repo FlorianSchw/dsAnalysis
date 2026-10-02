@@ -4,12 +4,14 @@
 \alias{remove_dsPackage}
 \title{Removes DataSHIELD packages from the DSLite setup and dependencies.R}
 \usage{
-remove_dsPackage(dsPackage = NULL, client = NULL)
+remove_dsPackage(dsPackage = NULL, client = NULL, uninstall = FALSE)
 }
 \arguments{
 \item{dsPackage}{name or names of the DataSHIELD server-side packages to remove}
 
 \item{client}{name or names of the matching client-side packages}
+
+\item{uninstall}{also uninstall the packages from the project library}
 }
 \description{
 Removes DataSHIELD packages from the DSLite setup and dependencies.R

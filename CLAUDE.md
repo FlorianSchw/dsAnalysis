@@ -197,12 +197,12 @@ Facts behind these items:
     so and accept an explicit `"owner/repo"`. The bot pairs server and
     client in package-workflows (`client_package_name.R`); keep the two
     approaches consistent.
-22. ~~**`version` argument:**~~ (done 2026-10-02; the client gets the server's version if it has that tag, else its latest — dsSurvival server and client versions differ) CRAN archive (`pkg@1.2.3`) for CRAN packages,
+22. ~~**`version` argument:**~~ (done 2026-10-02; without a version GitHub packages get their latest release tag, not the default branch (often a .9000 development version); the client gets the server's version if it has that tag, else its latest — dsSurvival server and client versions differ) CRAN archive (`pkg@1.2.3`) for CRAN packages,
     else the GitHub tag matching the version (tags are `v6.3.2` or
     `6.3.2` depending on the package: look them up), else stop and list
     the available versions; `ref =` as an escape hatch (commit or
     branch). Client and server versions should match the studies'.
-23. **renv handled by the functions:** analysts are not expected to know
+23. ~~**renv handled by the functions:**~~ (done 2026-10-02: `install_dsPackage()`, `check_project()`, renv step in `remove_dsPackage()`; tried end to end in a scratch renv project with dsSurvival. Keep test projects on short paths on Windows: renv's staging folder hits the 260-character limit) analysts are not expected to know
     renv. Every install/remove runs install → `dependencies.R` →
     `renv::snapshot()` → `renv::status()` and reports in plain words.
     Plus `check_project()`: runs `renv::status()`, explains what is out

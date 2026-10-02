@@ -44,7 +44,8 @@ add_dsPackage <- function(dsPackage = NULL, client = NULL){
   client_unique <- client[!dupl_int]
 
   #### step 1: library calls of the client packages
-  dslite_setup_codelines <- dslite_add_library_calls(dslite_setup_codelines, client_unique)
+  dslite_setup_codelines <- dslite_add_library_calls(dslite_setup_codelines,
+                                                     client_unique[!is.na(client_unique)])
 
   #### step 4: server packages in the DSLite configuration
   dslite_setup_codelines <- dslite_write_included_packages(dslite_setup_codelines,
