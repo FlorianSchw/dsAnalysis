@@ -180,7 +180,7 @@ Facts behind these items:
 - DSI 1.8.0 has `datashield.profiles(conns)`, `datashield.pkg_status(conns)`,
   and `builder$append(..., profile = )`.
 
-19. **`add_dsPackage()` writes `dependencies.R`:** `library(<server>)` and
+19. ~~**`add_dsPackage()` writes `dependencies.R`:**~~ (done 2026-10-02; block markers in `R/add_dsPackage.R`, step 1/4 now parsed) `library(<server>)` and
     `library(<client>)` in a marked block of its own (e.g.
     `#### dsPackages (managed by add_dsPackage)` … `end`), never inside
     the bot's `#### bot-suggest: packages` block.
