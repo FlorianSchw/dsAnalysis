@@ -36,6 +36,7 @@ test_that("project setup structure", {
 
   #### Testing that the analysis plan is in place
   testthat::expect_true(file.exists(paste0(tmp_path_to_proj, "/config/analysis-plan.yml")))
+  testthat::expect_true(file.exists(paste0(tmp_path_to_proj, "/R/99_DSLiteLearning.R")))
   testthat::expect_true(file.exists(paste0(tmp_path_to_proj, "/.github/workflows/datashield-analysis-suggest.yml")))
 
 

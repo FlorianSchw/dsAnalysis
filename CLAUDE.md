@@ -73,7 +73,8 @@ section "What dsAnalysis needs":
 
 4. ~~Remove the placeholders~~ (done 2026-10-02) `inst/templates/datashield/02_QualityCheck.R`,
    `03_DescriptiveStatistics.R` and `99_DSLiteLearning.R` (and their
-   copying in `initProject()`).
+   copying in `initProject()`). `99_DSLiteLearning.R` was restored on
+   request: keep it (`99_` scripts don't clash with the bot's `02_`, …).
 5. ~~Add a plan template~~ (done 2026-10-02) that `initProject()` puts at
    `config/analysis-plan.yml`, from
    `../package-workflows/examples/analysis-plan.yml`, keeping its header
@@ -115,6 +116,12 @@ the `paths:` settings of `config/analysis-suggest.yml`):
 10. ~~`update_MockData()` suits CI~~ (checked 2026-10-02, unchanged): pass `table_names` so it doesn't parse
     `01_DS_Login.R`; each `.rda` holds an object named after its server
     (`study1.rda` → `study1`). Keep it that way.
+17. **Citation script** in the project template, as in mepr
+    (`../mepr/inst/templates/scripts/99_package_citations.R`, copied by
+    `../mepr/R/initialize_project.R` to `R/99_package_citations.R`): it
+    writes the citations of the packages used into `citations/` with
+    `grateful::cite_packages()`. Bring it into `initProject()`, and make
+    sure `grateful` is installed in the project (`dependencies.R`).
 
 ### D. README
 
