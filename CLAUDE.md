@@ -112,7 +112,7 @@ the `paths:` settings of `config/analysis-suggest.yml`):
    and the `1:new_dsPackage_length` loops (lines ~91, ~112, ~144) run
    for 1 and 0 — they write `library(Client)` and break block 4. It
    should be a no-op (`seq_len()`, or return early).
-10. `update_MockData()` suits CI: pass `table_names` so it doesn't parse
+10. ~~`update_MockData()` suits CI~~ (checked 2026-10-02, unchanged): pass `table_names` so it doesn't parse
     `01_DS_Login.R`; each `.rda` holds an object named after its server
     (`study1.rda` → `study1`). Keep it that way.
 
