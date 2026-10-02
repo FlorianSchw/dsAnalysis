@@ -118,13 +118,13 @@ the `paths:` settings of `config/analysis-suggest.yml`):
 
 ### D. README
 
-11. A data protection note: the analysis plan's content (variable names,
+11. ~~A data protection note~~ (done 2026-10-02): the analysis plan's content (variable names,
     categories, study names, steps) goes to the Claude API; data,
     credentials and `R/01_DS_Login.R` never do.
-12. A setup guide for analysis projects: the three secrets
+12. ~~A setup guide for analysis projects~~ (done 2026-10-02): the three secrets
     (`ANTHROPIC_ORG_ID`, `ANTHROPIC_SVAC_ID`, `ANTHROPIC_FDRL_ANALYSIS`)
     and "Allow GitHub Actions to create and approve pull requests".
-13. How to try the scripts: `R_CONFIG_ACTIVE = 'testing'` in
+13. ~~How to try the scripts~~ (done 2026-10-02): `R_CONFIG_ACTIVE = 'testing'` in
     `.Renviron`, restart R, run `R/main.R`.
 
 ### E. Later
