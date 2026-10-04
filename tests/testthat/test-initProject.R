@@ -116,8 +116,122 @@ test_that("project setup structure", {
 
 })
 
+test_that("initProject() creates the full folder structure, placeholder files and returns the project path invisibly", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  local_dl <- function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) }
+  testthat::local_mocked_bindings(download.file = local_dl, .package = "utils")
+  proj_path <- withVisible(dsAnalysis::initProject(path = tmp_root, name = "proj-structure"))
+  
+  testthat::expect_false(proj_path$visible)
+  testthat::expect_equal(proj_path$value, paste0(tmp_root, "/proj-structure"))
+  
+  p <- proj_path$value
+  
+  expected_dirs <- c("results", "results/tables", "results/figures",
+                     "utils", "utils/mock_data", "utils/mock_data/demo_obiba",
+                     "utils/data_dictionary", "utils/setup",
+                     "citations", "config", ".github/workflows", "R")
+  testthat::expect_equal(as.logical(fs::dir_exists(paste0(p, "/", expected_dirs))),
+                         rep(TRUE, length(expected_dirs)))
+  
+  expected_files <- c("R/main.R", "R/01_DS_Login.R", "R/99_DSLiteLearning.R",
+                      "R/99_package_citations.R",
+                      "results/tables/placeholder.txt", "results/figures/placeholder.txt",
+                      "utils/setup/01_DSLite_Setup.R", "config.yml",
+                      "config/analysis-plan.yml",
+                      ".github/workflows/datashield-analysis-suggest.yml",
+                      "README.md", "dependencies.R", ".gitignore", ".Renviron",
+                      "proj-structure.Rproj")
+  testthat::expect_equal(as.logical(fs::file_exists(paste0(p, "/", expected_files))),
+                         rep(TRUE, length(expected_files)))
+  
+  testthat::expect_equal(as.logical(fs::file_exists(paste0(p, "/utils/mock_data/demo_obiba/",
+                                                           c("CNSIM1.rda", "CNSIM2.rda", "CNSIM3.rda")))),
+                         c(TRUE, TRUE, TRUE))
+})
 
+test_that("initProject() copies a non-empty README.md into the new project", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-readme")
+  
+  readme_path <- paste0(p, "/README.md")
+  testthat::expect_true(file.exists(readme_path))
+  
+  readme_lines <- readLines(readme_path)
+  testthat::expect_gt(length(readme_lines), 0)
+  testthat::expect_identical(readme_lines,
+                             readLines(dsAnalysis:::find_script("utils/README.md")))
+})
 
+test_that("initProject() stops with the overwrite message when the target directory already exists", {
+  tmp_root <- withr::local_tempdir()
+  dir.create(paste0(tmp_root, "/already-there"))
+  err <- testthat::expect_error(dsAnalysis::initProject(path = tmp_root, name = "already-there"))
+  msg <- stringr::str_squish(stringr::str_replace_all(err$message, "\\n", ""))
+  testthat::expect_equal(msg,
+                         paste0("The path and name you have provided would overwrite an existing directory (",
+                                tmp_root, "/already-there). Setup aborted."))
+})
 
+test_that("initProject() with switch_to_proj = TRUE calls usethis::proj_activate() with the new project path", {
+  tmp_root <- withr::local_tempdir()
+  activated <- new.env(parent = emptyenv())
+  activated$path <- NULL
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(path, ...) { activated$path <- path; invisible(NULL) },
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-switch", switch_to_proj = TRUE)
+  
+  testthat::expect_equal(p, paste0(tmp_root, "/proj-switch"))
+  testthat::expect_equal(activated$path, paste0(tmp_root, "/proj-switch"))
+})
 
-
+test_that("initProject() writes the complete .Renviron with all three OBIBA server blocks and keeps the gitignore placeholder exceptions", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-env")
+  
+  renviron_lines <- readLines(paste0(p, "/.Renviron"))
+  testthat::expect_equal(renviron_lines[1], "R_CONFIG_ACTIVE = 'production'")
+  testthat::expect_true(all(c("OBIBA1_TABLE = 'CNSIM.CNSIM1'",
+                              "OBIBA2_TABLE = 'CNSIM.CNSIM2'",
+                              "OBIBA3_TABLE = 'CNSIM.CNSIM3'") %in% renviron_lines))
+  testthat::expect_equal(sum(stringr::str_detect(renviron_lines, "OBIBA[0-9]_URL = 'https://opal-demo.obiba.org/'")), 3)
+  
+  gitignore_lines <- readLines(paste0(p, "/.gitignore"))
+  testthat::expect_true(all(c(".Renviron",
+                              "results/figures/*",
+                              "!results/figures/placeholder.txt",
+                              "results/tables/*",
+                              "!results/tables/placeholder.txt") %in% gitignore_lines))
+})
