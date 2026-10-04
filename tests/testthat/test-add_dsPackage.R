@@ -233,3 +233,7 @@ test_that("add_dsPackage errors when a step marker is missing from 01_DSLite_Set
   testthat::expect_error(dsAnalysis::add_dsPackage(dsPackage = "dsSurvival"),
                          "Please don't edit the step markers.", fixed = TRUE)
 })
+
+test_that("add_dsPackage errors when no package name is given", {
+  testthat::expect_error(dsAnalysis::add_dsPackage(), "No package name has been given.", fixed = TRUE)
+})
