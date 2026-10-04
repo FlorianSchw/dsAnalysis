@@ -1,14 +1,24 @@
-#'
 #' @title Installs DataSHIELD packages and adds them to the project
-#' @param dsPackage name or names of the DataSHIELD server-side packages
-#' @param version version of the server package
-#' @param ref GitHub branch, tag or commit of the server package
-#' @param source GitHub repository of the server package ("owner/repo")
-#' @param client name of the client package
-#' @param client_version version of the client package
-#' @param client_source GitHub repository of the client package ("owner/repo")
+#' @description Installs one or more DataSHIELD server-side packages, optionally with a matching client package, into the current renv project and registers them with the local DSLite setup.
+#' @details Resolves package specifications with the internal resolve_dsPackage() helper and installs them with renv::install() into the project found by here::here(), updating that project's renv library and lockfile. Also updates the local DSLite setup via add_dsPackage() and appends the new dependencies to dependencies.R via an internal renv_record() helper. When dsPackage has length greater than one, the function calls itself once per name with no version/ref/source/client options, since those only make sense for a single package.
+#' @param dsPackage Character vector giving the name(s) of the DataSHIELD server-side package(s) to install; if more than one name is given, version/ref/source/client arguments must be left NULL.
+#' @param version Single character string giving the CRAN/release version of the server package to install; only usable when dsPackage has length one.
+#' @param ref Single character string naming a GitHub branch, tag or commit of the server package to install; only usable when dsPackage has length one.
+#' @param source Single character string giving the GitHub repository of the server package in "owner/repo" form; only usable when dsPackage has length one.
+#' @param client Single character string giving the name of the client-side R package to install alongside the server package; only usable when dsPackage has length one.
+#' @param client_version Single character string giving the version of the client package to install; only usable when dsPackage has length one.
+#' @param client_source Single character string giving the GitHub repository of the client package in "owner/repo" form; only usable when dsPackage has length one.
+#' @return Returns invisibly: the character vector of package names supplied, when multiple packages were installed in a loop, or the list of resolved package specifications (server and, if given, client) for a single-package call. As a side effect it installs packages into the current renv project's library (updating its lockfile), updates the local DSLite setup, and appends records to dependencies.R in the project.
+#' @examples
+#' \dontrun{
+#' proj <- tempdir()
+#' old_wd <- setwd(proj)
+#' on.exit(setwd(old_wd), add = TRUE)
+#' 
+#' ## Not run because it installs packages and requires network access
+#' ## install_dsPackage("dsBase")
+#' }
 #' @export
-#'
 
 install_dsPackage <- function(dsPackage = NULL, version = NULL, ref = NULL, source = NULL,
                               client = NULL, client_version = NULL, client_source = NULL){
