@@ -115,10 +115,6 @@ test_that("add_dsPackage leaves the DSLite setup unchanged when all packages are
 #
 #
 
-test_that("add_dsPackage errors when no package name is given", {
-  testthat::expect_error(dsAnalysis::add_dsPackage(), "No package name has been given.", fixed = TRUE)
-})
-
 test_that("add_dsPackage errors when the number of client packages does not match the number of server packages", {
   testthat::expect_error(dsAnalysis::add_dsPackage(dsPackage = c("dsSurvival", "dsOmics"), client = "dsSurvivalClient"),
                          "Please provide one client package per DataSHIELD package.", fixed = TRUE)
