@@ -170,13 +170,14 @@ Facts behind these items:
   `dsMTLClient`, `dsQueryLibrary` ↔ `dsQueryLibraryServer`), repo names
   can differ from package names (`molgenis/ds-tidyverse` for
   `dsTidyverse`), and entries can be stale (`sofiasiamp/dsSupportClient`).
-- **The analysis bot loads `R/add_dsPackage.R` and `R/update_MockData.R`
-  on their own** with `sys.source()` from a dsAnalysis checkout
-  (`../package-workflows/R/functions/analysis/update_dslite_setup.R`) and
-  calls `add_dsPackage(missing)`. Anything these two functions call must
-  be defined in the same files, or that list in package-workflows must
-  change together with dsAnalysis. They must also stay usable without
-  network installs in the bot's run (or the bot must opt out).
+- **The analysis bot loads all of dsAnalysis' `R/`** with `sys.source()`
+  from a dsAnalysis checkout
+  (`../package-workflows/R/functions/analysis/update_dslite_setup.R`;
+  until 2026-10-04 only `add_dsPackage.R` and `update_MockData.R`) and
+  calls `add_dsPackage(missing)` and `update_MockData()`. So files in
+  `R/` must only define functions (one per file, the user's convention),
+  and those two must stay usable without network installs in the bot's
+  run.
 - DSI 1.8.0 has `datashield.profiles(conns)`, `datashield.pkg_status(conns)`,
   and `builder$append(..., profile = )`.
 
