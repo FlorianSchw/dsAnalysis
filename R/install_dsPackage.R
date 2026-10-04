@@ -32,9 +32,9 @@ install_dsPackage <- function(dsPackage = NULL, version = NULL, ref = NULL, sour
     return(invisible(dsPackage))
   }
 
-  packages <- resolve_dsPackage(dsPackage, version = version, ref = ref, source = source,
-                                client = client, client_version = client_version,
-                                client_source = client_source)
+  packages <- internal_resolve_dsPackage(dsPackage, version = version, ref = ref, source = source,
+                                         client = client, client_version = client_version,
+                                         client_source = client_source)
 
   project <- here::here()
   specs <- c(packages$server$spec, packages$client$spec)
@@ -45,7 +45,7 @@ install_dsPackage <- function(dsPackage = NULL, version = NULL, ref = NULL, sour
   client_name <- if (is.null(packages$client)) NA_character_ else packages$client$package
   add_dsPackage(packages$server$package, client = client_name)
 
-  renv_record(project)
+  internal_renv_record(project)
 
   message("Done: ", paste(c(packages$server$package, stats::na.omit(client_name)), collapse = " and "),
           " installed, added to the DSLite setup and to dependencies.R.")

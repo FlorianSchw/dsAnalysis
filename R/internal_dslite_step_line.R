@@ -1,5 +1,5 @@
 #### line number of a step marker in 01_DSLite_Setup.R; stops if the file doesn't have it
-dslite_step_line <- function(codelines, step){
+internal_dslite_step_line <- function(codelines, step){
 
   markers <- c("#### Step 1: Loading necessary libraries",
                "#### Step 2: Import of mock data files",

@@ -1,5 +1,5 @@
 #### adds and removes packages in the dependencies.R block (creates the block if needed)
-dependencies_set_dsPackages <- function(add = character(0), client = character(0), remove = character(0)){
+internal_dependencies_set_dsPackages <- function(add = character(0), client = character(0), remove = character(0)){
 
   #### marker line of the block the datashield-analysis-suggest workflow maintains
   bot_marker <- "#### bot-suggest: packages (updated by datashield-analysis-suggest)"
@@ -12,25 +12,24 @@ dependencies_set_dsPackages <- function(add = character(0), client = character(0
   }
 
   codelines <- readLines(con = dependencies_file)
-  packages <- dependencies_dsPackages(codelines)
+  recorded <- internal_dependencies_dsPackages(codelines)
+  markers <- attr(recorded, "markers")
+  block <- attr(recorded, "block")
 
-  packages <- packages[!(packages$server %in% c(remove, add)), , drop = FALSE]
+  packages <- recorded[!(recorded$server %in% c(remove, add)), , drop = FALSE]
   packages <- rbind(packages, data.frame(server = add, client = client))
 
-  block_new <- c(dependencies_markers()[["start"]],
+  block_new <- c(markers[["start"]],
                  ifelse(is.na(packages$client) | !nzchar(packages$client),
                         paste0("library(", packages$server, ")"),
                         paste0("library(", packages$server, "); library(", packages$client, ")")),
-                 dependencies_markers()[["end"]])
+                 markers[["end"]])
 
-  start <- which(codelines == dependencies_markers()[["start"]])
-  end <- which(codelines == dependencies_markers()[["end"]])
+  if(!is.null(block)){
 
-  if(length(start) > 0 && length(end) > 0){
-
-    codelines <- c(codelines[seq_len(start[1] - 1)],
+    codelines <- c(codelines[seq_len(block[1] - 1)],
                    block_new,
-                   codelines[-seq_len(end[1])])
+                   codelines[-seq_len(block[2])])
 
   } else {
 

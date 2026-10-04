@@ -6,7 +6,7 @@
 dsAnalysis_cache <- new.env(parent = emptyenv())
 
 #### the catalogue as a named list (one entry per package); NULL if it can't be read
-ds_catalogue <- function(refresh = FALSE){
+internal_ds_catalogue <- function(refresh = FALSE){
 
   url <- getOption("dsAnalysis.catalogue", "https://packages.datashield.org/packages.json")
 

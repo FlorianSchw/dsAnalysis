@@ -8,12 +8,12 @@ check_project <- function(fix = NULL){
 
   project <- here::here()
 
-  if(!renv_in_use(project)){
+  if(!file.exists(file.path(project, "renv.lock"))){
     message("This project doesn't use renv (no renv.lock), so there is nothing to check.")
     return(invisible(NULL))
   }
 
-  sync <- renv_compare(project)
+  sync <- internal_renv_compare(project)
 
   if(sync$synchronized){
     message("All good: the installed packages match renv.lock.")
@@ -64,11 +64,11 @@ check_project <- function(fix = NULL){
   if(identical(fix, "restore")){
     renv::restore(project = project, prompt = FALSE)
   } else if(identical(fix, "snapshot")){
-    renv_quietly(renv::snapshot(project = project, prompt = FALSE))
+    internal_renv_quietly(renv::snapshot(project = project, prompt = FALSE))
   }
 
   if(identical(fix, "restore") || identical(fix, "snapshot")){
-    if(renv_compare(project)$synchronized){
+    if(internal_renv_compare(project)$synchronized){
       message("All good now: the installed packages match renv.lock.")
     } else {
       message("Still not in sync. Run check_project() again to see what is left.")

@@ -1,8 +1,8 @@
 #### compares what the project uses, what is installed and what renv.lock records
-renv_compare <- function(project){
+internal_renv_compare <- function(project){
 
-  status <- renv_quietly(renv::status(project = project))
-  used <- renv_quietly(renv::dependencies(project, progress = FALSE))$Package
+  status <- internal_renv_quietly(renv::status(project = project))
+  used <- internal_renv_quietly(renv::dependencies(project, progress = FALSE))$Package
 
   base_packages <- rownames(utils::installed.packages(priority = "base"))
   used <- setdiff(unique(used), c(base_packages, "renv"))

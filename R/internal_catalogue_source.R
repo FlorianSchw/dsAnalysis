@@ -1,5 +1,5 @@
 #### where a catalogue entry is installed from: list(cran = TRUE/FALSE, repo = "owner/repo" or NA)
-catalogue_source <- function(entry){
+internal_catalogue_source <- function(entry){
 
   cran_link <- entry[["input"]][["cran_link"]]
   github_link <- entry[["input"]][["github_link"]]

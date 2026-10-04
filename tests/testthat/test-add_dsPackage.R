@@ -4,7 +4,7 @@ test_that("add_dsPackage leaves the DSLite setup unchanged when all packages are
   dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
   on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
   setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
-  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
 
   testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
 

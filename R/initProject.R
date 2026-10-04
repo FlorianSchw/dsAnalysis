@@ -67,43 +67,43 @@ initProject <- function(path = "home",
   dir.create(paste0(new_project_path, "/.github/workflows"), recursive = TRUE)
 
   #### copies over standardised R scripts for start
-  file.copy(from = find_script("datashield/main.R"),
+  file.copy(from = internal_find_script("datashield/main.R"),
             to = paste0(new_project_path, "/R/main.R"))
-  file.copy(from = find_script("datashield/01_DS_Login.R"),
+  file.copy(from = internal_find_script("datashield/01_DS_Login.R"),
             to = paste0(new_project_path, "/R/01_DS_Login.R"))
-  file.copy(from = find_script("datashield/99_DSLiteLearning.R"),
+  file.copy(from = internal_find_script("datashield/99_DSLiteLearning.R"),
             to = paste0(new_project_path, "/R/99_DSLiteLearning.R"))
-  file.copy(from = find_script("datashield/99_package_citations.R"),
+  file.copy(from = internal_find_script("datashield/99_package_citations.R"),
             to = paste0(new_project_path, "/R/99_package_citations.R"))
 
   #### copies over placeholder files to keep folder structure in place for GitHub
   #### for folders that should not be shared (e.g. results)
-  file.copy(from = find_script("utils/placeholder.txt"),
+  file.copy(from = internal_find_script("utils/placeholder.txt"),
             to = paste0(new_project_path, "/results/tables/placeholder.txt"))
-  file.copy(from = find_script("utils/placeholder.txt"),
+  file.copy(from = internal_find_script("utils/placeholder.txt"),
             to = paste0(new_project_path, "/results/figures/placeholder.txt"))
 
   #### copies over standardised R scripts for DSLite
-  file.copy(from = find_script("dslite/01_DSLite_Setup.R"),
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"),
             to = paste0(new_project_path, "/utils/setup/01_DSLite_Setup.R"))
 
 
   #### copies over initial config.yml file
-  file.copy(from = find_script("utils/config.yml"),
+  file.copy(from = internal_find_script("utils/config.yml"),
             to = paste0(new_project_path, "/config.yml"))
 
   #### copies over the analysis plan and the datashield-analysis-suggest workflow that reads it
-  file.copy(from = find_script("utils/analysis-plan.yml"),
+  file.copy(from = internal_find_script("utils/analysis-plan.yml"),
             to = paste0(new_project_path, "/config/analysis-plan.yml"))
-  file.copy(from = find_script("github/datashield-analysis-suggest.yml"),
+  file.copy(from = internal_find_script("github/datashield-analysis-suggest.yml"),
             to = paste0(new_project_path, "/.github/workflows/datashield-analysis-suggest.yml"))
 
   #### copies over the project README (credentials, testing mode, help)
-  file.copy(from = find_script("utils/README.md"),
+  file.copy(from = internal_find_script("utils/README.md"),
             to = paste0(new_project_path, "/README.md"))
 
   #### copies over dependencies file for renv
-  file.copy(from = find_script("utils/dependencies.R"),
+  file.copy(from = internal_find_script("utils/dependencies.R"),
             to = paste0(new_project_path, "/dependencies.R"))
 
 

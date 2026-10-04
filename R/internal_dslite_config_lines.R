@@ -1,8 +1,8 @@
 #### lines of the dslite.server$config(...) call in step 4
-dslite_config_lines <- function(codelines){
+internal_dslite_config_lines <- function(codelines){
 
-  step4_line <- dslite_step_line(codelines, 4)
-  step5_line <- dslite_step_line(codelines, 5)
+  step4_line <- internal_dslite_step_line(codelines, 4)
+  step5_line <- internal_dslite_step_line(codelines, 5)
   step4_range <- step4_line:(step5_line - 1)
 
   config_start <- step4_range[startsWith(codelines[step4_range], "dslite.server$config(")]

@@ -1,5 +1,5 @@
 #### the tags of a GitHub repository (first 100)
-github_tags <- function(repo){
+internal_github_tags <- function(repo){
 
   headers <- c(Accept = "application/vnd.github+json")
   if(nzchar(Sys.getenv("GITHUB_PAT"))){
