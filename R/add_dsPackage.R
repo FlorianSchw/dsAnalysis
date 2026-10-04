@@ -1,14 +1,23 @@
-#'
-#' @title Function to add dsPackages to the 01_DSLite_Setup.R file ABCDDE
-#' @description XXX
-#' @details XXXXXXsssddasdsdfsdasdfsaasdsadfsdfsdf
-#' @return adjusted R Script
+#' @title Register DataSHIELD packages in the DSLite setup script
+#' @description Adds one or more DataSHIELD server-side packages (and their client-side counterparts) to the project's DSLite setup script and dependency tracking file.
+#' @details Reads and rewrites the local file utils/setup/01_DSLite_Setup.R (located via here::here), using internal helper functions to detect packages already listed, insert library() calls for the client packages, and update the vector of server packages passed to DSLite's configuration. It also calls internal_dependencies_set_dsPackages() to add corresponding library calls to the project's dependencies file so renv tracks both server and client packages. Packages already present in the setup file are skipped with a message and excluded from the writes; nothing is written to either file if all requested packages are already included.
+#' @param dsPackage Character vector of names of the DataSHIELD server-side packages to add to the local DSLite instance; required, the function stops with an error if left NULL.
+#' @param client Character vector of matching client-side package names, one per element of dsPackage; if NULL (the default), each client name is derived by appending "Client" to the corresponding dsPackage name, and an error is raised if the lengths don't match.
+#' @return Returns invisibly NULL if every requested package was already present, otherwise the character vector of newly added dsPackage names (those not already listed). As a side effect it overwrites utils/setup/01_DSLite_Setup.R with updated library calls and server package list, and updates the project's dependencies file via internal_dependencies_set_dsPackages().
 #' @author Florian Schwarz for the German Institute of Human Nutrition
-#' @param dsPackage name or names of the DataSHIELD server-side packages to add to DSLite instance
-#' @param client name or names of the matching client-side packages
 #' @import stringr
+#' @examples
+#' \dontrun{
+#' ## This function modifies utils/setup/01_DSLite_Setup.R in the current
+#' ## DataSHIELD analysis project located via here::here(), so it should
+#' ## only be run inside such a project.
+#' ## Not run in a temporary directory because add_dsPackage always
+#' ## targets the project's own setup file rather than an arbitrary path.
+#' ## \dontrun{
+#' ## add_dsPackage(dsPackage = "dsBase", client = "dsBaseClient")
+#' ## }
+#' }
 #' @export
-#'
 
 
 add_dsPackage <- function(dsPackage = NULL, client = NULL){
