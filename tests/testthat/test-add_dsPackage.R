@@ -114,3 +114,126 @@ test_that("add_dsPackage leaves the DSLite setup unchanged when all packages are
 #
 #
 #
+
+test_that("add_dsPackage errors when no package name is given", {
+  testthat::expect_error(dsAnalysis::add_dsPackage(), "No package name has been given.", fixed = TRUE)
+})
+
+test_that("add_dsPackage errors when the number of client packages does not match the number of server packages", {
+  testthat::expect_error(dsAnalysis::add_dsPackage(dsPackage = c("dsSurvival", "dsOmics"), client = "dsSurvivalClient"),
+                         "Please provide one client package per DataSHIELD package.", fixed = TRUE)
+})
+
+test_that("add_dsPackage returns the added package invisibly and writes library call and include entry for a single new package", {
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  res <- testthat::expect_invisible(dsAnalysis::add_dsPackage(dsPackage = "dsSurvival"))
+  testthat::expect_identical(res, "dsSurvival")
+  
+  setup_lines <- readLines(setup_file)
+  testthat::expect_true("library(dsSurvivalClient)" %in% setup_lines)
+  testthat::expect_equal(sum(setup_lines == "library(dsSurvivalClient)"), 1)
+  testthat::expect_true(any(stringr::str_detect(setup_lines, "include=c\\(\"dsBase\",")))
+  testthat::expect_true(any(stringr::str_detect(setup_lines, "\"dsSurvival\"\\)\\)\\)")))
+})
+
+test_that("add_dsPackage adds several packages at once and keeps the previously included ones in the include list", {
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  res <- dsAnalysis::add_dsPackage(dsPackage = c("dsSurvival", "dsOmics"))
+  testthat::expect_identical(res, c("dsSurvival", "dsOmics"))
+  
+  setup_lines <- readLines(setup_file)
+  testthat::expect_true(all(c("library(dsSurvivalClient)", "library(dsOmicsClient)") %in% setup_lines))
+  
+  config_code <- paste(setup_lines, collapse = "")
+  include_code <- stringr::str_match(config_code, "include\\s*=\\s*c\\(([^)]*)\\)")[1, 2]
+  included <- stringr::str_match_all(include_code, "\"([^\"]+)\"")[[1]][, 2]
+  testthat::expect_identical(included, c("dsBase", "dsSurvival", "dsOmics"))
+})
+
+test_that("add_dsPackage adds only the new package and messages about the duplicate when a mix of known and new packages is given", {
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  testthat::expect_message(res <- dsAnalysis::add_dsPackage(dsPackage = c("dsBase", "dsSurvival")),
+                           "The DataSHIELD package dsBase is already included in the DSLite Setup.", fixed = TRUE)
+  testthat::expect_identical(res, "dsSurvival")
+  
+  setup_lines <- readLines(setup_file)
+  config_code <- paste(setup_lines, collapse = "")
+  include_code <- stringr::str_match(config_code, "include\\s*=\\s*c\\(([^)]*)\\)")[1, 2]
+  included <- stringr::str_match_all(include_code, "\"([^\"]+)\"")[[1]][, 2]
+  testthat::expect_identical(included, c("dsBase", "dsSurvival"))
+  testthat::expect_equal(sum(setup_lines == "library(dsSurvivalClient)"), 1)
+})
+
+test_that("add_dsPackage uses the given client package name instead of the default <dsPackage>Client", {
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  dsAnalysis::add_dsPackage(dsPackage = "dsSurvival", client = "myOwnClient")
+  
+  setup_lines <- readLines(setup_file)
+  testthat::expect_true("library(myOwnClient)" %in% setup_lines)
+  testthat::expect_false("library(dsSurvivalClient)" %in% setup_lines)
+})
+
+test_that("add_dsPackage writes the server and client library calls into the dependencies.R block", {
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  dependencies_file <- file.path(tmp_proj, "dependencies.R")
+  writeLines(c("library(here)", "library(tidyverse)"), dependencies_file)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  dsAnalysis::add_dsPackage(dsPackage = "dsSurvival")
+  
+  dep_lines <- readLines(dependencies_file)
+  testthat::expect_true("#### DataSHIELD packages (managed by add_dsPackage and remove_dsPackage)" %in% dep_lines)
+  testthat::expect_true("#### DataSHIELD packages end" %in% dep_lines)
+  testthat::expect_true("library(dsSurvival); library(dsSurvivalClient)" %in% dep_lines)
+  testthat::expect_true(all(c("library(here)", "library(tidyverse)") %in% dep_lines))
+})
+
+test_that("add_dsPackage messages that dependencies.R was not updated when the project has no dependencies.R", {
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  testthat::expect_message(dsAnalysis::add_dsPackage(dsPackage = "dsSurvival"),
+                           "No dependencies.R found in the project, so it was not updated.", fixed = TRUE)
+  testthat::expect_false(file.exists(file.path(tmp_proj, "dependencies.R")))
+  testthat::expect_true("library(dsSurvivalClient)" %in% readLines(setup_file))
+})
+
+test_that("add_dsPackage errors when a step marker is missing from 01_DSLite_Setup.R", {
+  tmp_proj <- tempfile("dslite-setup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  on.exit(unlink(tmp_proj, recursive = TRUE), add = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  broken <- readLines(setup_file)
+  broken[broken == "#### Step 4: Defining the server-side settings"] <- "#### Step 4: my own heading"
+  writeLines(broken, setup_file)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  testthat::expect_error(dsAnalysis::add_dsPackage(dsPackage = "dsSurvival"),
+                         "Please don't edit the step markers.", fixed = TRUE)
+})
