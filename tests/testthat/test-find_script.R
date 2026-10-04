@@ -1,10 +1,5 @@
 test_that("find script", {
 
-  package <- "dsAnalysis"
-  test_name <- "testproj-456"
-  tmp_path <- fs::path_temp()
-  tmp_path_to_proj <- dsAnalysis::initProject(path = tmp_path, name = test_name)
-
   script_name1 <- "datashield/01_DS_Login.R"
   script_name2 <- "datashield/main.R"
   script_name3 <- "utils/placeholder.txt"
