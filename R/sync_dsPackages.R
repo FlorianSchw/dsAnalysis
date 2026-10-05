@@ -86,12 +86,12 @@ sync_dsPackages <- function(conns = NULL, install = TRUE){
   setup_file <- here::here("utils/setup", "01_DSLite_Setup.R")
 
   if(file.exists(setup_file)){
-    included <- dslite_included_packages(readLines(setup_file))
+    included <- internal_dslite_included_packages(readLines(setup_file))
     missing <- servers_packages$package[!to_install & !(servers_packages$package %in% included)]
     if(length(missing) > 0){
-      catalogue <- ds_catalogue()
+      catalogue <- internal_ds_catalogue()
       clients <- if (is.null(catalogue)) paste0(missing, "Client") else
-        vapply(missing, catalogue_client, "", catalogue = catalogue, USE.NAMES = FALSE)
+        vapply(missing, internal_catalogue_client, "", catalogue = catalogue, USE.NAMES = FALSE)
       add_dsPackage(missing, client = clients)
     }
   }

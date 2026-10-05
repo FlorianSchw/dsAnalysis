@@ -8,14 +8,14 @@
 
 list_dsPackages <- function(search = NULL, status = NULL, refresh = FALSE){
 
-  catalogue <- ds_catalogue(refresh = refresh)
+  catalogue <- internal_ds_catalogue(refresh = refresh)
 
   if(is.null(catalogue)){
     return(invisible(tibble::tibble()))
   }
 
   #### one row per package that isn't the client of another one
-  clients <- vapply(names(catalogue), catalogue_client, "", catalogue = catalogue)
+  clients <- vapply(names(catalogue), internal_catalogue_client, "", catalogue = catalogue)
   packages <- setdiff(names(catalogue), stats::na.omit(clients))
 
   field <- function(entry, part, name){
@@ -29,7 +29,7 @@ list_dsPackages <- function(search = NULL, status = NULL, refresh = FALSE){
     status = vapply(catalogue[packages], field, "", part = "input", name = "status"),
     github_version = vapply(catalogue[packages], field, "", part = "repo", name = "Version"),
     source = vapply(catalogue[packages], function(entry){
-      src <- catalogue_source(entry)
+      src <- internal_catalogue_source(entry)
       if (src$cran) "CRAN" else if (!is.na(src$repo)) paste0("GitHub: ", src$repo) else ""
     }, ""),
     description = vapply(catalogue[packages], field, "", part = "input", name = "description")

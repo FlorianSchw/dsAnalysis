@@ -5,9 +5,11 @@
 An R package that creates DataSHIELD **analysis project** environments
 (`initProject()`): a project folder with a login script, a DSLite test
 setup with mock data, a `main.R`, `dependencies.R` and a `config.yml`
-with a `production` and a `testing` profile. Helper functions:
-`add_dsPackage()`, `initMockData()`, `update_MockData()`,
-`find_script()`. Templates live in `inst/templates/` (`datashield/`,
+with a `production` and a `testing` profile. Exported functions:
+`initProject()`, `initMockData()`, `update_MockData()`, and for
+DataSHIELD packages `add_dsPackage()`, `remove_dsPackage()`,
+`install_dsPackage()`, `list_dsPackages()`, `sync_dsPackages()`,
+`check_project()`. Templates live in `inst/templates/` (`datashield/`,
 `dslite/`, `utils/`).
 
 It is also an **analyst-side helper package** in DataSHIELD terms — not
@@ -21,6 +23,9 @@ reusable workflow `datashield-analysis-suggest.yml` in
 
 - Don't commit or push unless asked; leave changes in the working tree
   for review.
+- One function per file in `R/`, file named after the function — helpers
+  too. Functions that aren't exported are named `internal_…()` (file
+  `R/internal_….R`), so they stand out (since 2026-10-04).
 - Branches: work goes into `dev` (pull requests from feature branches);
   `main` only gets releases, through a `dev` → `main` pull request
   (`release-trigger.yml` checks, merges and starts `release-publish.yml`,
@@ -170,13 +175,14 @@ Facts behind these items:
   `dsMTLClient`, `dsQueryLibrary` ↔ `dsQueryLibraryServer`), repo names
   can differ from package names (`molgenis/ds-tidyverse` for
   `dsTidyverse`), and entries can be stale (`sofiasiamp/dsSupportClient`).
-- **The analysis bot loads `R/add_dsPackage.R` and `R/update_MockData.R`
-  on their own** with `sys.source()` from a dsAnalysis checkout
-  (`../package-workflows/R/functions/analysis/update_dslite_setup.R`) and
-  calls `add_dsPackage(missing)`. Anything these two functions call must
-  be defined in the same files, or that list in package-workflows must
-  change together with dsAnalysis. They must also stay usable without
-  network installs in the bot's run (or the bot must opt out).
+- **The analysis bot loads all of dsAnalysis' `R/`** with `sys.source()`
+  from a dsAnalysis checkout
+  (`../package-workflows/R/functions/analysis/update_dslite_setup.R`;
+  until 2026-10-04 only `add_dsPackage.R` and `update_MockData.R`) and
+  calls `add_dsPackage(missing)` and `update_MockData()`. So files in
+  `R/` must only define functions (one per file, the user's convention),
+  and those two must stay usable without network installs in the bot's
+  run.
 - DSI 1.8.0 has `datashield.profiles(conns)`, `datashield.pkg_status(conns)`,
   and `builder$append(..., profile = )`.
 
@@ -189,7 +195,7 @@ Facts behind these items:
     from the block in `dependencies.R`; refuses `dsBase`; uninstalling
     optional (`renv::remove()`). Rewrite step 4 by parsing the
     `include=c(...)` list instead of counting lines (cause of item 9).
-21. ~~**Install source from the catalogue:**~~ (done 2026-10-02; `R/dsPackage_sources.R`) analysts give only the
+21. ~~**Install source from the catalogue:**~~ (done 2026-10-02; `R/internal_resolve_dsPackage.R` and helpers, first in `R/dsPackage_sources.R`) analysts give only the
     package name. CRAN if `cran_link` is set, else the catalogue's
     `github_link` (`owner/repo`) via `renv::install()`; user override with
     `"owner/repo"`. The client from the catalogue's own entry, not by

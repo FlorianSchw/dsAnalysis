@@ -10,7 +10,7 @@
 #' @import usethis
 #'
 
-find_script <- function(script_name, package = "dsAnalysis") {
+internal_find_script <- function(script_name, package = "dsAnalysis") {
 
   path <- tryCatch(
     fs::path_package(package = package, "templates", script_name),

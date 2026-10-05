@@ -18,11 +18,11 @@ test_that("install_dsPackage reports the installed packages in a final Done mess
   tmp_proj <- withr::local_tempdir("dslite-install-done-")
   dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
   setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
-  file.copy(from = find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
   
   testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
   testthat::local_mocked_bindings(install = function(packages, project = NULL, prompt = TRUE, ...) invisible(packages), .package = "renv")
-  testthat::local_mocked_bindings(renv_record = function(project) invisible(project))
+  testthat::local_mocked_bindings(internal_renv_record = function(project) invisible(project))
   msgs <- testthat::capture_messages(dsAnalysis::install_dsPackage(dsPackage = "dsSurvival"))
   
   testthat::expect_true(any(stringr::str_detect(msgs, "^Installing ")))

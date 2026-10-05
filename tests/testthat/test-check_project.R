@@ -19,8 +19,7 @@ test_that("check_project reports a synchronized project and returns the comparis
                   used_not_recorded = character(0),
                   other_version = character(0),
                   unexplained = FALSE)
-  testthat::local_mocked_bindings(renv_in_use = function(project) TRUE,
-                                  renv_compare = function(project) sync_ok)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) sync_ok)
   testthat::expect_message(res <- dsAnalysis::check_project(),
                            "All good: the installed packages match renv.lock.",
                            fixed = TRUE)
@@ -39,8 +38,7 @@ test_that("check_project lists used-but-not-installed packages, splitting record
                    used_not_recorded = character(0),
                    other_version = character(0),
                    unexplained = FALSE)
-  testthat::local_mocked_bindings(renv_in_use = function(project) TRUE,
-                                  renv_compare = function(project) sync_bad)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) sync_bad)
   msgs <- testthat::capture_messages(res <- dsAnalysis::check_project(fix = "none"))
   testthat::expect_true(any(grepl("Used by the project but not installed: dplyr, dsBaseClient.", msgs, fixed = TRUE)))
   testthat::expect_true(any(grepl("renv::restore() installs dplyr in the versions recorded in renv.lock.", msgs, fixed = TRUE)))
@@ -59,8 +57,7 @@ test_that("check_project reports recorded-not-installed, used-not-recorded, othe
                    used_not_recorded = c("stringr"),
                    other_version = c("glue"),
                    unexplained = TRUE)
-  testthat::local_mocked_bindings(renv_in_use = function(project) TRUE,
-                                  renv_compare = function(project) sync_bad)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) sync_bad)
   msgs <- testthat::capture_messages(res <- dsAnalysis::check_project(fix = "none"))
   testthat::expect_true(any(grepl("Recorded in renv.lock but not installed: jsonlite.", msgs, fixed = TRUE)))
   testthat::expect_true(any(grepl("Used by the project but not recorded in renv.lock: stringr.", msgs, fixed = TRUE)))
@@ -94,8 +91,7 @@ test_that("check_project(fix = \"restore\") calls renv::restore on the project a
                   used_not_recorded = character(0),
                   other_version = character(0),
                   unexplained = FALSE)
-  testthat::local_mocked_bindings(renv_in_use = function(project) TRUE,
-                                  renv_compare = function(project) {
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) {
                                     calls$n <- calls$n + 1L
                                     if (calls$n == 1L) sync_bad else sync_ok
                                   })
@@ -128,8 +124,7 @@ test_that("check_project(fix = \"snapshot\") calls renv::snapshot and warns that
                    used_not_recorded = "stringr",
                    other_version = character(0),
                    unexplained = FALSE)
-  testthat::local_mocked_bindings(renv_in_use = function(project) TRUE,
-                                  renv_compare = function(project) sync_bad)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) sync_bad)
   testthat::local_mocked_bindings(snapshot = function(project, prompt, ...) {
                                     snap$n <- snap$n + 1L
                                     snap$project <- project
@@ -159,8 +154,7 @@ test_that("check_project(fix = \"none\") neither restores nor snapshots and prin
                    used_not_recorded = "stringr",
                    other_version = character(0),
                    unexplained = FALSE)
-  testthat::local_mocked_bindings(renv_in_use = function(project) TRUE,
-                                  renv_compare = function(project) {
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) {
                                     counters$compare <- counters$compare + 1L
                                     sync_bad
                                   })
