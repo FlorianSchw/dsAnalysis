@@ -169,14 +169,13 @@ test_that("initProject() copies a non-empty README.md into the new project", {
   testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
                                   .package = "utils")
   p <- dsAnalysis::initProject(path = tmp_root, name = "proj-readme")
-  
   readme_path <- paste0(p, "/README.md")
   testthat::expect_true(file.exists(readme_path))
   
   readme_lines <- readLines(readme_path)
   testthat::expect_gt(length(readme_lines), 0)
   testthat::expect_identical(readme_lines,
-                             readLines(dsAnalysis:::find_script("utils/README.md")))
+                             readLines(dsAnalysis:::internal_find_script("utils/README.md")))
 })
 
 test_that("initProject() stops with the overwrite message when the target directory already exists", {
@@ -234,4 +233,120 @@ test_that("initProject() writes the complete .Renviron with all three OBIBA serv
                               "!results/figures/placeholder.txt",
                               "results/tables/*",
                               "!results/tables/placeholder.txt") %in% gitignore_lines))
+})
+
+test_that("initProject() copies config.yml, analysis-plan.yml and the workflow file identically to the packaged templates", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-templates")
+  testthat::expect_identical(readLines(paste0(p, "/config.yml")),
+                             readLines(dsAnalysis:::internal_find_script("utils/config.yml")))
+  testthat::expect_identical(readLines(paste0(p, "/config/analysis-plan.yml")),
+                             readLines(dsAnalysis:::internal_find_script("utils/analysis-plan.yml")))
+  testthat::expect_identical(readLines(paste0(p, "/.github/workflows/datashield-analysis-suggest.yml")),
+                             readLines(dsAnalysis:::internal_find_script("github/datashield-analysis-suggest.yml")))
+})
+
+test_that("initProject() copies the same placeholder.txt template into results/tables and results/figures", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-placeholder")
+  placeholder_template <- readLines(dsAnalysis:::internal_find_script("utils/placeholder.txt"))
+  testthat::expect_identical(readLines(paste0(p, "/results/tables/placeholder.txt")), placeholder_template)
+  testthat::expect_identical(readLines(paste0(p, "/results/figures/placeholder.txt")), placeholder_template)
+})
+
+test_that("initProject() does not call usethis::proj_activate() when switch_to_proj is FALSE", {
+  tmp_root <- withr::local_tempdir()
+  calls <- new.env(parent = emptyenv())
+  calls$n <- 0L
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) { calls$n <- calls$n + 1L; invisible(NULL) },
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-noswitch", switch_to_proj = FALSE)
+  testthat::expect_equal(calls$n, 0L)
+  testthat::expect_equal(p, paste0(tmp_root, "/proj-noswitch"))
+  testthat::expect_true(fs::dir_exists(p))
+})
+
+test_that("initProject() passes the new project path to renv::init(), renv::install() and renv::snapshot()", {
+  tmp_root <- withr::local_tempdir()
+  rec <- new.env(parent = emptyenv())
+  rec$init <- NULL
+  rec$install_pkgs <- NULL
+  rec$install_proj <- NULL
+  rec$hydrate <- NULL
+  rec$snapshot <- NULL
+  testthat::local_mocked_bindings(init = function(project, ...) { rec$init <- project; invisible(NULL) },
+                                  install = function(packages, library, project, ...) {
+                                    rec$install_pkgs <- packages
+                                    rec$install_proj <- project
+                                    invisible(NULL)
+                                  },
+                                  hydrate = function(library, project, ...) { rec$hydrate <- project; invisible(NULL) },
+                                  snapshot = function(project, ...) { rec$snapshot <- project; invisible(NULL) },
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-renv")
+  testthat::expect_equal(rec$init, p)
+  testthat::expect_equal(rec$install_proj, p)
+  testthat::expect_equal(rec$hydrate, p)
+  testthat::expect_equal(rec$snapshot, p)
+  testthat::expect_equal(rec$install_pkgs,
+                         c("dsBaseClient", "nfdi4health/dsSupportClient", "FlorianSchw/dsAnalysis"))
+})
+
+test_that("initProject() errors on a non-logical switch_to_proj before creating the project directory", {
+  tmp_root <- withr::local_tempdir()
+  testthat::expect_error(dsAnalysis::initProject(path = tmp_root, name = "proj-badflag", switch_to_proj = "yes"),
+                         regexp = "switch_to_proj has to be logical, i.e. either TRUE or FALSE.")
+  testthat::expect_false(fs::dir_exists(paste0(tmp_root, "/proj-badflag")))
+  testthat::expect_equal(length(fs::dir_ls(tmp_root, all = TRUE)), 0)
+})
+
+test_that("initProject() copies main.R and dependencies.R identically to the packaged templates including the bot-suggest markers", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-scripts")
+  main_lines <- readLines(paste0(p, "/R/main.R"))
+  dep_lines <- readLines(paste0(p, "/dependencies.R"))
+  testthat::expect_identical(main_lines, readLines(dsAnalysis:::internal_find_script("datashield/main.R")))
+  testthat::expect_identical(dep_lines, readLines(dsAnalysis:::internal_find_script("utils/dependencies.R")))
+  testthat::expect_true(all(c("#### bot-suggest: scripts (updated by datashield-analysis-suggest)",
+                              "#### bot-suggest: scripts end") %in% main_lines))
+  testthat::expect_true(all(c("#### bot-suggest: packages (updated by datashield-analysis-suggest)",
+                              "#### bot-suggest: packages end") %in% dep_lines))
 })
