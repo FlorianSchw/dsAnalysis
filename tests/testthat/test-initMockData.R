@@ -210,3 +210,29 @@ test_that("initMockData writes mock data whose means of complete numeric variabl
     testthat::expect_lt(abs(mock_mean - real_mean), 0.5 * real_sd)
   }
 })
+
+test_that("initMockData uses the default folder name MockData_New when folder_name is NULL", {
+  testthat::skip_if_not_installed("DSLite")
+  testthat::skip_if_not_installed("dsBase")
+  cnsim <- local_cnsim_project()
+  mock_path <- dsAnalysis::initMockData(df = "D", datasources = cnsim$conns)
+  testthat::expect_equal(mock_path, file.path(cnsim$project, "utils/mock_data", "MockData_New"))
+  testthat::expect_true(fs::dir_exists(file.path(cnsim$project, "utils", "mock_data", "MockData_New")))
+  testthat::expect_setequal(basename(fs::dir_ls(mock_path)), c("sim1.rda", "sim2.rda", "sim3.rda"))
+})
+
+test_that("initMockData writes independent mock data on two runs into different folders", {
+  testthat::skip_if_not_installed("DSLite")
+  testthat::skip_if_not_installed("dsBase")
+  cnsim <- local_cnsim_project()
+  path_one <- dsAnalysis::initMockData(folder_name = "mock-run1", df = "D", datasources = cnsim$conns)
+  path_two <- dsAnalysis::initMockData(folder_name = "mock-run2", df = "D", datasources = cnsim$conns)
+  testthat::expect_true(fs::dir_exists(path_one))
+  testthat::expect_true(fs::dir_exists(path_two))
+  one <- new.env(); two <- new.env()
+  load(file.path(path_one, "sim1.rda"), envir = one)
+  load(file.path(path_two, "sim1.rda"), envir = two)
+  testthat::expect_identical(colnames(one$sim1), colnames(two$sim1))
+  testthat::expect_equal(nrow(one$sim1), nrow(two$sim1))
+  testthat::expect_false(isTRUE(all.equal(one$sim1$LAB_TSC, two$sim1$LAB_TSC)))
+})

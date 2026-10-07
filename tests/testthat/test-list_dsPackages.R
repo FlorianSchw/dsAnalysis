@@ -87,3 +87,78 @@ test_that("list_dsPackages passes refresh through to internal_ds_catalogue", {
   testthat::expect_true(seen)
   testthat::expect_equal(nrow(res), 0L)
 })
+
+test_that("list_dsPackages applies status and search filters together", {
+  fake_catalogue <- list(
+    dsOmics = list(input = list(status = "active", description = "omics tools"), repo = list(Version = "1")),
+    dsOmicsOld = list(input = list(status = "retired", description = "omics tools"), repo = list(Version = "0")),
+    dsStats = list(input = list(status = "active", description = "statistics"), repo = list(Version = "2"))
+  )
+  testthat::local_mocked_bindings(
+    internal_ds_catalogue = function(refresh = FALSE) fake_catalogue,
+    internal_catalogue_client = function(name, catalogue) NA_character_,
+    internal_catalogue_source = function(entry) list(cran = FALSE, repo = NA_character_)
+  )
+  testthat::expect_message(res <- dsAnalysis::list_dsPackages(search = "omics", status = "active"), "1 DataSHIELD package")
+  testthat::expect_equal(res$package, "dsOmics")
+  testthat::expect_equal(nrow(res), 1L)
+})
+
+test_that("list_dsPackages treats the search string as a fixed, non-regex pattern", {
+  fake_catalogue <- list(
+    dsDot = list(input = list(status = "active", description = "version 1.0 release"), repo = list(Version = "1")),
+    dsOther = list(input = list(status = "active", description = "version 120 release"), repo = list(Version = "2"))
+  )
+  testthat::local_mocked_bindings(
+    internal_ds_catalogue = function(refresh = FALSE) fake_catalogue,
+    internal_catalogue_client = function(name, catalogue) NA_character_,
+    internal_catalogue_source = function(entry) list(cran = FALSE, repo = NA_character_)
+  )
+  testthat::expect_message(res <- dsAnalysis::list_dsPackages(search = "1.0"), "1 DataSHIELD package")
+  testthat::expect_equal(res$package, "dsDot")
+})
+
+test_that("list_dsPackages returns a zero-row tibble with the six columns and a no-packages message when the status filter matches nothing", {
+  fake_catalogue <- list(
+    dsA = list(input = list(status = "active", description = "a"), repo = list(Version = "1"))
+  )
+  testthat::local_mocked_bindings(
+    internal_ds_catalogue = function(refresh = FALSE) fake_catalogue,
+    internal_catalogue_client = function(name, catalogue) NA_character_,
+    internal_catalogue_source = function(entry) list(cran = FALSE, repo = NA_character_)
+  )
+  testthat::expect_message(res <- dsAnalysis::list_dsPackages(status = "retired"), "No DataSHIELD packages found")
+  testthat::expect_equal(nrow(res), 0L)
+  testthat::expect_equal(names(res), c("package", "client", "status", "github_version", "source", "description"))
+})
+
+test_that("list_dsPackages returns a visible tibble with six character columns when packages are found", {
+  fake_catalogue <- list(
+    dsA = list(input = list(status = "active", description = "a"), repo = list(Version = "1"))
+  )
+  testthat::local_mocked_bindings(
+    internal_ds_catalogue = function(refresh = FALSE) fake_catalogue,
+    internal_catalogue_client = function(name, catalogue) NA_character_,
+    internal_catalogue_source = function(entry) list(cran = FALSE, repo = NA_character_)
+  )
+  testthat::expect_message(res <- withVisible(dsAnalysis::list_dsPackages()), "1 DataSHIELD package")
+  testthat::expect_true(res$visible)
+  testthat::expect_s3_class(res$value, "tbl_df")
+  testthat::expect_equal(dim(res$value), c(1L, 6L))
+  testthat::expect_true(all(vapply(res$value, is.character, logical(1))))
+})
+
+test_that("list_dsPackages defaults refresh to FALSE when passing it to internal_ds_catalogue", {
+  seen <- NULL
+  fake_catalogue <- list(
+    dsA = list(input = list(status = "active", description = "a"), repo = list(Version = "1"))
+  )
+  testthat::local_mocked_bindings(
+    internal_ds_catalogue = function(refresh = FALSE) { seen <<- refresh; fake_catalogue },
+    internal_catalogue_client = function(name, catalogue) NA_character_,
+    internal_catalogue_source = function(entry) list(cran = FALSE, repo = NA_character_)
+  )
+  testthat::expect_message(res <- dsAnalysis::list_dsPackages(), "1 DataSHIELD package")
+  testthat::expect_false(seen)
+  testthat::expect_equal(res$package, "dsA")
+})

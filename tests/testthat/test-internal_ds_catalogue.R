@@ -135,3 +135,67 @@ test_that("internal_ds_catalogue returns the cached catalogue even after the dsA
   testthat::expect_identical(names(dsAnalysis:::internal_ds_catalogue()), "dsBase")
   testthat::expect_identical(names(dsAnalysis:::internal_ds_catalogue(refresh = TRUE)), "dsOther")
 })
+
+test_that("internal_ds_catalogue falls back to the default packages.datashield.org url in its failure message when the dsAnalysis.catalogue option is unset", {
+  withr::local_options(list(dsAnalysis.catalogue = NULL))
+  withr::defer(rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache))
+  rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache)
+  testthat::local_mocked_bindings(fromJSON = function(...) stop("no network"), .package = "jsonlite")
+  testthat::expect_message(res <- dsAnalysis:::internal_ds_catalogue(), regexp = "https://packages\\.datashield\\.org/packages\\.json")
+  testthat::expect_null(res)
+  testthat::expect_null(dsAnalysis:::dsAnalysis_cache$catalogue)
+})
+
+test_that("internal_ds_catalogue reads the catalogue file when refresh is TRUE and the cache is empty", {
+  dir <- withr::local_tempdir()
+  file <- file.path(dir, "packages.json")
+  writeLines('{"dsBase":{"source":"cran"},"dsMediation":{"source":"github","repo":"o/dsMediation"}}', file)
+  withr::local_options(list(dsAnalysis.catalogue = file))
+  withr::defer(rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache))
+  rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache)
+  res <- dsAnalysis:::internal_ds_catalogue(refresh = TRUE)
+  testthat::expect_identical(names(res), c("dsBase", "dsMediation"))
+  testthat::expect_identical(res$dsMediation$repo, "o/dsMediation")
+  testthat::expect_identical(dsAnalysis:::dsAnalysis_cache$catalogue, res)
+})
+
+test_that("internal_ds_catalogue calls jsonlite::fromJSON exactly once for two consecutive calls with refresh FALSE", {
+  withr::defer(rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache))
+  rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache)
+  calls <- 0L
+  testthat::local_mocked_bindings(fromJSON = function(...) { calls <<- calls + 1L; list(dsBase = list(source = "cran")) }, .package = "jsonlite")
+  first <- dsAnalysis:::internal_ds_catalogue()
+  second <- dsAnalysis:::internal_ds_catalogue()
+  testthat::expect_identical(calls, 1L)
+  testthat::expect_identical(names(second), "dsBase")
+  testthat::expect_identical(second, first)
+  testthat::expect_identical(dsAnalysis:::internal_ds_catalogue(refresh = TRUE), first)
+  testthat::expect_identical(calls, 2L)
+})
+
+test_that("internal_ds_catalogue passes the url from the dsAnalysis.catalogue option as the first argument to jsonlite::fromJSON and simplifyVector = FALSE", {
+  withr::local_options(list(dsAnalysis.catalogue = "https://example.org/custom.json"))
+  withr::defer(rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache))
+  rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache)
+  seen_url <- NULL
+  seen_simplify <- NULL
+  testthat::local_mocked_bindings(fromJSON = function(txt, simplifyVector = TRUE, ...) { seen_url <<- txt; seen_simplify <<- simplifyVector; list(dsBase = list(source = "cran")) }, .package = "jsonlite")
+  res <- dsAnalysis:::internal_ds_catalogue()
+  testthat::expect_identical(seen_url, "https://example.org/custom.json")
+  testthat::expect_false(seen_simplify)
+  testthat::expect_identical(names(res), "dsBase")
+})
+
+test_that("internal_ds_catalogue returns a catalogue read from a JSON array file as an unnamed list of length 2", {
+  dir <- withr::local_tempdir()
+  file <- file.path(dir, "packages.json")
+  writeLines('[{"name":"dsBase"},{"name":"dsSurvival"}]', file)
+  withr::local_options(list(dsAnalysis.catalogue = file))
+  withr::defer(rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache))
+  rm(list = ls(dsAnalysis:::dsAnalysis_cache), envir = dsAnalysis:::dsAnalysis_cache)
+  res <- dsAnalysis:::internal_ds_catalogue()
+  testthat::expect_type(res, "list")
+  testthat::expect_length(res, 2L)
+  testthat::expect_null(names(res))
+  testthat::expect_identical(res[[2]]$name, "dsSurvival")
+})

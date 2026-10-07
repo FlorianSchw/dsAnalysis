@@ -40,3 +40,31 @@ test_that("internal_dslite_step_line raises its error without a call context", {
   testthat::expect_null(conditionCall(err))
   testthat::expect_true(grepl("#### Step 4: Defining the server-side settings", conditionMessage(err), fixed = TRUE))
 })
+
+test_that("internal_dslite_step_line returns the 1-based index of each of the seven step markers in a full script", {
+  codelines <- c("#### Step 1: Loading necessary libraries",
+                 "library(DSLite)",
+                 "#### Step 2: Import of mock data files",
+                 "mock <- read.csv('x.csv')",
+                 "#### Step 3: Defining the server-side data in a new dslite server",
+                 "#### Step 4: Defining the server-side settings",
+                 "#### Step 5: Building the logindata object",
+                 "#### Step 6: Login to the different DSLite Servers",
+                 "#### Step 7: Cleaning the environment",
+                 "rm(list = ls())")
+  testthat::expect_identical(dsAnalysis:::internal_dslite_step_line(codelines, 1), 1L)
+  testthat::expect_identical(dsAnalysis:::internal_dslite_step_line(codelines, 2), 3L)
+  testthat::expect_identical(dsAnalysis:::internal_dslite_step_line(codelines, 3), 5L)
+  testthat::expect_identical(dsAnalysis:::internal_dslite_step_line(codelines, 4), 6L)
+  testthat::expect_identical(dsAnalysis:::internal_dslite_step_line(codelines, 5), 7L)
+  testthat::expect_identical(dsAnalysis:::internal_dslite_step_line(codelines, 6), 8L)
+  testthat::expect_identical(dsAnalysis:::internal_dslite_step_line(codelines, 7), 9L)
+})
+
+test_that("internal_dslite_step_line returns a single integer of length one for a marker preceded by other lines", {
+  codelines <- c("# header comment", "", "x <- 1", "#### Step 7: Cleaning the environment")
+  res <- dsAnalysis:::internal_dslite_step_line(codelines, 7)
+  testthat::expect_length(res, 1)
+  testthat::expect_identical(res, 4L)
+  testthat::expect_true(is.integer(res))
+})

@@ -43,3 +43,24 @@ test_that("internal_catalogue_client never returns the package itself when the c
   testthat::expect_true(is.na(res))
   testthat::expect_length(res, 1L)
 })
+
+test_that("internal_catalogue_client returns the Server-stripped name only when the <package>Client candidate is absent, preferring <package>Client otherwise", {
+  catalogue <- list(dsQueryLibrary = list(input = list(cran_link = "")), dsQueryLibraryServerClient = list(input = list(cran_link = "")))
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_client("dsQueryLibraryServer", catalogue), "dsQueryLibraryServerClient")
+})
+
+test_that("internal_catalogue_client returns an unnamed single character string", {
+  catalogue <- list(dsBaseClient = list(input = list(cran_link = "")))
+  res <- dsAnalysis:::internal_catalogue_client("dsBase", catalogue)
+  testthat::expect_identical(res, "dsBaseClient")
+  testthat::expect_null(names(res))
+  testthat::expect_length(res, 1L)
+})
+
+test_that("internal_catalogue_client returns NA_character_ when the catalogue holds unrelated packages only", {
+  catalogue <- list(dsSurvival = list(input = list(cran_link = "")), dsOmics = list(input = list(cran_link = "")))
+  res <- dsAnalysis:::internal_catalogue_client("dsMediation", catalogue)
+  testthat::expect_true(is.na(res))
+  testthat::expect_type(res, "character")
+  testthat::expect_length(res, 1L)
+})

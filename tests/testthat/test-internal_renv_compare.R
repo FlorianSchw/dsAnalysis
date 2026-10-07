@@ -96,3 +96,78 @@ test_that("internal_renv_compare sets unexplained TRUE when status is out of syn
   testthat::expect_true(res$unexplained)
   testthat::expect_identical(res$recorded, "dsBase")
 })
+
+test_that("internal_renv_compare excludes base packages and renv from the used packages so they never appear in used_not_installed", {
+  tmp <- withr::local_tempdir()
+  testthat::local_mocked_bindings(
+    status = function(project, ...) list(synchronized = FALSE,
+                                         lockfile = list(Packages = list(dsBase = list(Version = "6.3.0"))),
+                                         library = list(Packages = list(dsBase = list(Version = "6.3.0")))),
+    dependencies = function(...) data.frame(Package = c("stats", "utils", "renv", "dsBase"), stringsAsFactors = FALSE),
+    .package = "renv")
+  res <- dsAnalysis:::internal_renv_compare(tmp)
+  testthat::expect_identical(res$used_not_installed, character(0))
+  testthat::expect_identical(res$used_not_recorded, character(0))
+  testthat::expect_true(res$unexplained)
+})
+
+test_that("internal_renv_compare de-duplicates repeated dependency entries, reporting a used but uninstalled package once", {
+  tmp <- withr::local_tempdir()
+  testthat::local_mocked_bindings(
+    status = function(project, ...) list(synchronized = FALSE,
+                                         lockfile = list(Packages = list(dsBase = list(Version = "6.3.0"))),
+                                         library = list(Packages = list(dsBase = list(Version = "6.3.0")))),
+    dependencies = function(...) data.frame(Package = c("dsSurvival", "dsSurvival", "dsBase", "dsSurvival"), stringsAsFactors = FALSE),
+    .package = "renv")
+  res <- dsAnalysis:::internal_renv_compare(tmp)
+  testthat::expect_identical(res$used_not_installed, "dsSurvival")
+  testthat::expect_length(res$used_not_installed, 1L)
+  testthat::expect_false(res$unexplained)
+})
+
+test_that("internal_renv_compare puts a used, recorded but not installed package in used_not_installed and not in recorded_not_installed", {
+  tmp <- withr::local_tempdir()
+  testthat::local_mocked_bindings(
+    status = function(project, ...) list(synchronized = FALSE,
+                                         lockfile = list(Packages = list(dsBase = list(Version = "6.3.0"), ggplot2 = list(Version = "3.5.1"))),
+                                         library = list(Packages = list(dsBase = list(Version = "6.3.0")))),
+    dependencies = function(...) data.frame(Package = c("dsBase", "ggplot2"), stringsAsFactors = FALSE),
+    .package = "renv")
+  res <- dsAnalysis:::internal_renv_compare(tmp)
+  testthat::expect_identical(res$used_not_installed, "ggplot2")
+  testthat::expect_identical(res$recorded_not_installed, character(0))
+  testthat::expect_identical(res$used_not_recorded, character(0))
+  testthat::expect_identical(res$other_version, character(0))
+  testthat::expect_false(res$unexplained)
+})
+
+test_that("internal_renv_compare treats a missing synchronized flag as not synchronized and sets unexplained TRUE", {
+  tmp <- withr::local_tempdir()
+  testthat::local_mocked_bindings(
+    status = function(project, ...) list(lockfile = list(Packages = list(dsBase = list(Version = "6.3.0"))),
+                                         library = list(Packages = list(dsBase = list(Version = "6.3.0")))),
+    dependencies = function(...) data.frame(Package = "dsBase", stringsAsFactors = FALSE),
+    .package = "renv")
+  res <- dsAnalysis:::internal_renv_compare(tmp)
+  testthat::expect_false(res$synchronized)
+  testthat::expect_true(res$unexplained)
+})
+
+test_that("internal_renv_compare reports every difference category at once and sets unexplained FALSE", {
+  tmp <- withr::local_tempdir()
+  testthat::local_mocked_bindings(
+    status = function(project, ...) list(synchronized = FALSE,
+                                         lockfile = list(Packages = list(dsBase = list(Version = "6.3.0"),
+                                                                         zoo = list(Version = "1.8-12"))),
+                                         library = list(Packages = list(dsBase = list(Version = "6.2.0"),
+                                                                        ggplot2 = list(Version = "3.5.1")))),
+    dependencies = function(...) data.frame(Package = c("dsBase", "ggplot2", "dsSurvival"), stringsAsFactors = FALSE),
+    .package = "renv")
+  res <- dsAnalysis:::internal_renv_compare(tmp)
+  testthat::expect_identical(res$recorded, c("dsBase", "zoo"))
+  testthat::expect_identical(res$used_not_installed, "dsSurvival")
+  testthat::expect_identical(res$recorded_not_installed, "zoo")
+  testthat::expect_identical(res$used_not_recorded, "ggplot2")
+  testthat::expect_identical(res$other_version, "dsBase")
+  testthat::expect_false(res$unexplained)
+})

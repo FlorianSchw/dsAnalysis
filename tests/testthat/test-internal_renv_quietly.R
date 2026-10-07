@@ -34,3 +34,24 @@ test_that("internal_renv_quietly returns a complex value such as a data.frame un
   testthat::expect_equal(nrow(res), 2L)
   testthat::expect_identical(names(res), c("server", "client"))
 })
+
+test_that("internal_renv_quietly returns the value invisibly so auto-printing produces no output", {
+  out <- utils::capture.output(dsAnalysis:::internal_renv_quietly("invisible value"))
+  testthat::expect_identical(out, character(0))
+  testthat::expect_identical(withVisible(dsAnalysis:::internal_renv_quietly("invisible value"))$visible, FALSE)
+  testthat::expect_identical(withVisible(dsAnalysis:::internal_renv_quietly("invisible value"))$value, "invisible value")
+})
+
+test_that("internal_renv_quietly swallows printed output of the expression and emits nothing on stdout", {
+  out <- utils::capture.output(res <- dsAnalysis:::internal_renv_quietly({cat("line one\n"); print("line two"); 42L}))
+  testthat::expect_identical(out, character(0))
+  testthat::expect_identical(res, 42L)
+})
+
+test_that("internal_renv_quietly returns a named character vector of package names unchanged", {
+  pkgs <- c(base = "dsBase", surv = "dsSurvival")
+  res <- dsAnalysis:::internal_renv_quietly({message("resolving"); pkgs})
+  testthat::expect_identical(res, pkgs)
+  testthat::expect_identical(names(res), c("base", "surv"))
+  testthat::expect_identical(length(res), 2L)
+})

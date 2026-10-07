@@ -350,3 +350,63 @@ test_that("initProject() copies main.R and dependencies.R identically to the pac
   testthat::expect_true(all(c("#### bot-suggest: packages (updated by datashield-analysis-suggest)",
                               "#### bot-suggest: packages end") %in% dep_lines))
 })
+
+test_that("initProject() errors with the missing-name message without creating anything in the target directory", {
+  tmp_root <- withr::local_tempdir()
+  err <- testthat::expect_error(dsAnalysis::initProject(path = tmp_root))
+  testthat::expect_equal(err$message, "Please provide a path name for the project to be created.")
+  testthat::expect_equal(length(fs::dir_ls(tmp_root, all = TRUE)), 0)
+})
+
+test_that("initProject() with path = 'home' builds the project path under the expanded home directory and aborts when it exists", {
+  existing_home_dir <- fs::path_expand("~")
+  testthat::expect_true(fs::dir_exists(existing_home_dir))
+  home_child <- basename(existing_home_dir)
+  err <- testthat::expect_error(dsAnalysis::initProject(path = "home",
+                                                        name = paste0("../", home_child)))
+  msg <- stringr::str_squish(stringr::str_replace_all(err$message, "\\n", ""))
+  testthat::expect_equal(msg,
+                         paste0("The path and name you have provided would overwrite an existing directory (",
+                                existing_home_dir, "/../", home_child, "). Setup aborted."))
+})
+
+test_that("initProject() leaves the empty folders citations, config, utils/data_dictionary and utils/mock_data without extra files", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p <- dsAnalysis::initProject(path = tmp_root, name = "proj-empty")
+  testthat::expect_equal(length(fs::dir_ls(paste0(p, "/citations"), all = TRUE)), 0)
+  testthat::expect_equal(basename(fs::dir_ls(paste0(p, "/config"), all = TRUE)), "analysis-plan.yml")
+  testthat::expect_equal(length(fs::dir_ls(paste0(p, "/utils/data_dictionary"), all = TRUE)), 0)
+  testthat::expect_setequal(basename(fs::dir_ls(paste0(p, "/utils/mock_data"), all = TRUE)), "demo_obiba")
+  testthat::expect_equal(length(fs::dir_ls(paste0(p, "/utils/mock_data/demo_obiba"), all = TRUE)), 3)
+  testthat::expect_equal(length(fs::dir_ls(paste0(p, "/results/tables"), all = TRUE)), 1)
+  testthat::expect_equal(length(fs::dir_ls(paste0(p, "/results/figures"), all = TRUE)), 1)
+})
+
+test_that("initProject() creates two independent projects side by side in the same parent directory", {
+  tmp_root <- withr::local_tempdir()
+  testthat::local_mocked_bindings(init = function(...) invisible(NULL),
+                                  install = function(...) invisible(NULL),
+                                  hydrate = function(...) invisible(NULL),
+                                  snapshot = function(...) invisible(NULL),
+                                  .package = "renv")
+  testthat::local_mocked_bindings(proj_activate = function(...) invisible(NULL),
+                                  .package = "usethis")
+  testthat::local_mocked_bindings(download.file = function(url, destfile, ...) { writeLines("mock", destfile); invisible(0L) },
+                                  .package = "utils")
+  p1 <- dsAnalysis::initProject(path = tmp_root, name = "proj-a")
+  p2 <- dsAnalysis::initProject(path = tmp_root, name = "proj-b")
+  testthat::expect_equal(p1, paste0(tmp_root, "/proj-a"))
+  testthat::expect_equal(p2, paste0(tmp_root, "/proj-b"))
+  testthat::expect_setequal(basename(fs::dir_ls(tmp_root, all = TRUE)), c("proj-a", "proj-b"))
+  testthat::expect_true(file.exists(paste0(p1, "/proj-a.Rproj")))
+  testthat::expect_true(file.exists(paste0(p2, "/proj-b.Rproj")))
+})
