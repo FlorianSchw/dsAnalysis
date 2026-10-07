@@ -61,3 +61,35 @@ test_that("internal_dependencies_dsPackages returns no rows and a NULL block for
   testthat::expect_identical(names(res), c("server", "client"))
   testthat::expect_null(attr(res, "block"))
 })
+
+test_that("internal_dependencies_dsPackages returns the markers attribute with the exact start and end marker strings", {
+  codelines <- c("#### DataSHIELD packages (managed by add_dsPackage and remove_dsPackage)", "library(dsBase); library(dsBaseClient)", "#### DataSHIELD packages end")
+  res <- dsAnalysis:::internal_dependencies_dsPackages(codelines)
+  testthat::expect_identical(attr(res, "markers"), c(start = "#### DataSHIELD packages (managed by add_dsPackage and remove_dsPackage)", end = "#### DataSHIELD packages end"))
+})
+
+test_that("internal_dependencies_dsPackages returns one row per line with a library call and keeps the order of the lines", {
+  codelines <- c("#### DataSHIELD packages (managed by add_dsPackage and remove_dsPackage)", "library(dsBase); library(dsBaseClient)", "library(dsSurvival); library(dsSurvivalClient)", "library(dsMediation)", "#### DataSHIELD packages end")
+  res <- dsAnalysis:::internal_dependencies_dsPackages(codelines)
+  testthat::expect_equal(nrow(res), 3L)
+  testthat::expect_identical(res$server, c("dsBase", "dsSurvival", "dsMediation"))
+  testthat::expect_identical(res$client, c("dsBaseClient", "dsSurvivalClient", NA_character_))
+  testthat::expect_identical(attr(res, "block"), c(1L, 5L))
+})
+
+test_that("internal_dependencies_dsPackages extracts quoted package names including the quotes from library calls", {
+  codelines <- c("#### DataSHIELD packages (managed by add_dsPackage and remove_dsPackage)", "library('dsBase'); library('dsBaseClient')", "#### DataSHIELD packages end")
+  res <- dsAnalysis:::internal_dependencies_dsPackages(codelines)
+  testthat::expect_equal(nrow(res), 1L)
+  testthat::expect_identical(res$server, "'dsBase'")
+  testthat::expect_identical(res$client, "'dsBaseClient'")
+})
+
+test_that("internal_dependencies_dsPackages returns a data.frame with row names of the kept lines and columns of type character", {
+  codelines <- c("#### DataSHIELD packages (managed by add_dsPackage and remove_dsPackage)", "#### a comment", "library(dsBase); library(dsBaseClient)", "#### DataSHIELD packages end")
+  res <- dsAnalysis:::internal_dependencies_dsPackages(codelines)
+  testthat::expect_s3_class(res, "data.frame")
+  testthat::expect_equal(dim(res), c(1L, 2L))
+  testthat::expect_type(res$server, "character")
+  testthat::expect_type(res$client, "character")
+})

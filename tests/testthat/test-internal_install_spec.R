@@ -67,3 +67,42 @@ test_that("internal_install_spec propagates the tag lookup error when a version 
                          "Could not read the versions (tags) of https://github.com/datashield/dsBase",
                          fixed = TRUE)
 })
+
+test_that("internal_install_spec picks the newest release when tags mix plain and v-prefixed numbering and two-part versions", {
+  testthat::local_mocked_bindings(internal_github_tags = function(repo) c("1.9", "v1.10", "1.10.1", "v0.1.0"), .package = "dsAnalysis")
+  testthat::expect_identical(dsAnalysis:::internal_install_spec("dsBase", list(cran = FALSE, repo = "datashield/dsBase")),
+                             "datashield/dsBase@1.10.1")
+})
+
+test_that("internal_install_spec returns the bare repo with a message when the tag list is empty and no version is given", {
+  testthat::local_mocked_bindings(internal_github_tags = function(repo) character(0), .package = "dsAnalysis")
+  testthat::expect_message(res <- dsAnalysis:::internal_install_spec("mypkg", list(cran = FALSE, repo = "owner/mypkg")),
+                           "No released version of mypkg found on GitHub; installing its default branch.",
+                           fixed = TRUE)
+  testthat::expect_identical(res, "owner/mypkg")
+})
+
+test_that("internal_install_spec prefers the exact tag over the v-prefixed one when both exist for the requested version", {
+  testthat::local_mocked_bindings(internal_github_tags = function(repo) c("1.2.0", "v1.2.0"), .package = "dsAnalysis")
+  testthat::expect_identical(dsAnalysis:::internal_install_spec("dsBase", list(cran = FALSE, repo = "datashield/dsBase"), version = "1.2.0"),
+                             "datashield/dsBase@1.2.0")
+})
+
+test_that("internal_install_spec errors with an empty version list when no tags look like releases and a version is requested", {
+  testthat::local_mocked_bindings(internal_github_tags = function(repo) c("nightly", "v2.0.0-rc1"), .package = "dsAnalysis")
+  testthat::expect_error(dsAnalysis:::internal_install_spec("dsBase", list(cran = FALSE, repo = "datashield/dsBase"), version = "1.0.0"),
+                         "Version 1.0.0 of dsBase was not found on GitHub (datashield/dsBase). Available versions: ",
+                         fixed = TRUE)
+})
+
+test_that("internal_install_spec takes the ref branch before consulting GitHub tags at all", {
+  testthat::local_mocked_bindings(internal_github_tags = function(repo) stop("internal_github_tags must not be called"), .package = "dsAnalysis")
+  testthat::expect_identical(dsAnalysis:::internal_install_spec("dsBase", list(cran = FALSE, repo = "datashield/dsBase"), ref = "devel"),
+                             "datashield/dsBase@devel")
+})
+
+test_that("internal_install_spec takes the CRAN branch without consulting GitHub tags even when a repo is known", {
+  testthat::local_mocked_bindings(internal_github_tags = function(repo) stop("internal_github_tags must not be called"), .package = "dsAnalysis")
+  testthat::expect_identical(dsAnalysis:::internal_install_spec("dsBase", list(cran = TRUE, repo = "datashield/dsBase")),
+                             "dsBase")
+})

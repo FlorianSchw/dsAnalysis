@@ -185,3 +185,27 @@ test_that("add_dsPackage errors when a step marker is missing from 01_DSLite_Set
   testthat::expect_error(dsAnalysis::add_dsPackage(dsPackage = "dsSurvival"),
                          "Please don't edit the step markers\\.")
 })
+
+test_that("add_dsPackage with client = NA adds the server package to the include list but writes no library call to the DSLite setup", {
+  tmp_proj <- withr::local_tempdir("dslite-nacli-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  setup_file <- file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"), to = setup_file)
+  writeLines(c("library(here)"), con = file.path(tmp_proj, "dependencies.R"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  added <- dsAnalysis::add_dsPackage(dsPackage = "dsSurvival", client = NA)
+  testthat::expect_identical(added, "dsSurvival")
+  
+  lines_after <- readLines(setup_file)
+  testthat::expect_false("library(dsSurvivalClient)" %in% lines_after)
+  testthat::expect_false("library(NA)" %in% lines_after)
+  testthat::expect_identical(internal_dslite_included_packages(lines_after), c("dsBase", "dsSurvival"))
+})
+
+test_that("add_dsPackage errors when the project has no 01_DSLite_Setup.R file", {
+  tmp_proj <- withr::local_tempdir("dslite-nosetup-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  testthat::expect_error(dsAnalysis::add_dsPackage(dsPackage = "dsSurvival"))
+  testthat::expect_false(file.exists(file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R")))
+})

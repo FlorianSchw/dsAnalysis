@@ -67,3 +67,57 @@ test_that("internal_github_tags errors when the repository has no tags (empty JS
                          "Could not read the versions (tags) of https://github.com/datashield/notags",
                          fixed = TRUE)
 })
+
+test_that("internal_github_tags returns a single tag name as a length-1 character vector when the JSON array has one element", {
+  tmp <- withr::local_tempdir()
+  json_file <- file.path(tmp, "one.json")
+  writeLines('[{"name":"v2.0.0","zipball_url":"https://x"}]', json_file)
+  testthat::local_mocked_bindings(url = function(description, ...) base::file(json_file, open = "r"), .package = "base")
+  res <- dsAnalysis:::internal_github_tags("datashield/dsBase")
+  testthat::expect_identical(res, "v2.0.0")
+  testthat::expect_type(res, "character")
+  testthat::expect_length(res, 1L)
+})
+
+test_that("internal_github_tags errors when the response is not valid JSON", {
+  tmp <- withr::local_tempdir()
+  bad_file <- file.path(tmp, "bad.json")
+  writeLines("not json at all", bad_file)
+  testthat::local_mocked_bindings(url = function(description, ...) base::file(bad_file, open = "r"), .package = "base")
+  testthat::expect_error(dsAnalysis:::internal_github_tags("datashield/badjson"),
+                         "Could not read the versions (tags) of https://github.com/datashield/badjson. Check the repository name, or give a ref instead of a version.",
+                         fixed = TRUE)
+})
+
+test_that("internal_github_tags reads tag names spread over multiple lines of the response", {
+  tmp <- withr::local_tempdir()
+  json_file <- file.path(tmp, "multiline.json")
+  writeLines(c("[", '  {"name":"v1.1.0"},', '  {"name":"v1.0.0"}', "]"), json_file)
+  testthat::local_mocked_bindings(url = function(description, ...) base::file(json_file, open = "r"), .package = "base")
+  testthat::expect_identical(dsAnalysis:::internal_github_tags("datashield/dsBase"),
+                             c("v1.1.0", "v1.0.0"))
+})
+
+test_that("internal_github_tags builds the URL from the repo argument it is given", {
+  tmp <- withr::local_tempdir()
+  json_file <- file.path(tmp, "tags.json")
+  writeLines('[{"name":"0.1.0"}]', json_file)
+  seen <- new.env(parent = emptyenv())
+  testthat::local_mocked_bindings(url = function(description, ..., headers = NULL) {
+    seen$description <- description
+    base::file(json_file, open = "r")
+  }, .package = "base")
+  testthat::expect_identical(dsAnalysis:::internal_github_tags("myorg/myrepo"), "0.1.0")
+  testthat::expect_identical(seen$description,
+                             "https://api.github.com/repos/myorg/myrepo/tags?per_page=100")
+})
+
+test_that("internal_github_tags closes the connection it opened after a successful read", {
+  tmp <- withr::local_tempdir()
+  json_file <- file.path(tmp, "tags.json")
+  writeLines('[{"name":"3.0.0"}]', json_file)
+  before <- nrow(showConnections(all = FALSE))
+  testthat::local_mocked_bindings(url = function(description, ...) base::file(json_file, open = "r"), .package = "base")
+  testthat::expect_identical(dsAnalysis:::internal_github_tags("datashield/dsBase"), "3.0.0")
+  testthat::expect_equal(nrow(showConnections(all = FALSE)), before)
+})

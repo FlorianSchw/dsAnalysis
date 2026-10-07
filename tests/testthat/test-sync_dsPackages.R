@@ -273,3 +273,261 @@ test_that("sync_dsPackages with install = TRUE falls back to the latest version 
   testthat::expect_equal(calls[[1]]$version, "6.3.6.9000")
   testthat::expect_null(calls[[2]]$version)
 })
+
+test_that("sync_dsPackages with install = TRUE installs only the packages whose installed version differs from the server version", {
+  setup <- local_cnsim_project()
+  
+  installed_version <- as.character(utils::packageVersion("DSI"))
+  
+  testhat_status <- list(
+    package_status = matrix(rep(TRUE, 6), nrow = 2, byrow = TRUE,
+                            dimnames = list(c("DSI", "dsMissing"), c("sim1", "sim2", "sim3"))),
+    version_status = matrix(c(rep(installed_version, 3), rep("1.2.3", 3)), nrow = 2, byrow = TRUE,
+                            dimnames = list(c("DSI", "dsMissing"), c("sim1", "sim2", "sim3")))
+  )
+  
+  calls <- list()
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  
+  testthat::local_mocked_bindings(
+    install_dsPackage = function(package, version = NULL, ...){
+      calls[[length(calls) + 1]] <<- list(package = package, version = version)
+      invisible(TRUE)
+    }
+  )
+  res <- NULL
+  testthat::expect_invisible(res <- dsAnalysis::sync_dsPackages(conns = setup$conns, install = TRUE))
+  testthat::expect_length(calls, 1)
+  testthat::expect_equal(calls[[1]]$package, "dsMissing")
+  testthat::expect_equal(calls[[1]]$version, "1.2.3")
+  testthat::expect_equal(res$package, c("DSI", "dsMissing"))
+  testthat::expect_equal(res$installed, c(installed_version, NA_character_))
+})
+
+test_that("sync_dsPackages with install = TRUE messages that a package was not installed when both the version and the latest install fail", {
+  setup <- local_cnsim_project()
+  
+  testhat_status <- list(
+    package_status = matrix(rep(TRUE, 3), nrow = 1,
+                            dimnames = list("dsBroken", c("sim1", "sim2", "sim3"))),
+    version_status = matrix(rep("9.9.9", 3), nrow = 1,
+                            dimnames = list("dsBroken", c("sim1", "sim2", "sim3")))
+  )
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  
+  testthat::local_mocked_bindings(
+    install_dsPackage = function(package, version = NULL, ...) stop("repository down")
+  )
+  msgs <- testthat::capture_messages(dsAnalysis::sync_dsPackages(conns = setup$conns, install = TRUE))
+  testthat::expect_true(any(grepl("Version 9.9.9 of dsBroken can't be installed: repository down", msgs, fixed = TRUE)))
+  testthat::expect_true(any(grepl("dsBroken was not installed: repository down", msgs, fixed = TRUE)))
+})
+
+test_that("sync_dsPackages with install = TRUE adds installed packages that are missing from the DSLite setup file via add_dsPackage", {
+  setup <- local_cnsim_project()
+  
+  installed_version <- as.character(utils::packageVersion("DSI"))
+  
+  dir.create(file.path(setup$project, "utils", "setup"), recursive = TRUE, showWarnings = FALSE)
+  writeLines("# DSLite setup file", file.path(setup$project, "utils", "setup", "01_DSLite_Setup.R"))
+  
+  testhat_status <- list(
+    package_status = matrix(rep(TRUE, 3), nrow = 1,
+                            dimnames = list("DSI", c("sim1", "sim2", "sim3"))),
+    version_status = matrix(rep(installed_version, 3), nrow = 1,
+                            dimnames = list("DSI", c("sim1", "sim2", "sim3")))
+  )
+  
+  added <- NULL
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  
+  testthat::local_mocked_bindings(
+    internal_dslite_included_packages = function(...) character(0),
+    internal_ds_catalogue = function(...) NULL,
+    add_dsPackage = function(package, client = NULL, ...){
+      added <<- list(package = package, client = client)
+      invisible(TRUE)
+    }
+  )
+  res <- NULL
+  testthat::expect_invisible(res <- dsAnalysis::sync_dsPackages(conns = setup$conns, install = TRUE))
+  testthat::expect_equal(added$package, "DSI")
+  testthat::expect_equal(added$client, "DSIClient")
+  testthat::expect_equal(res$package, "DSI")
+})
+
+test_that("sync_dsPackages with install = TRUE does not call add_dsPackage when the package is already in the DSLite setup file", {
+  setup <- local_cnsim_project()
+  
+  installed_version <- as.character(utils::packageVersion("DSI"))
+  
+  dir.create(file.path(setup$project, "utils", "setup"), recursive = TRUE, showWarnings = FALSE)
+  writeLines("# DSLite setup file", file.path(setup$project, "utils", "setup", "01_DSLite_Setup.R"))
+  
+  testhat_status <- list(
+    package_status = matrix(rep(TRUE, 3), nrow = 1,
+                            dimnames = list("DSI", c("sim1", "sim2", "sim3"))),
+    version_status = matrix(rep(installed_version, 3), nrow = 1,
+                            dimnames = list("DSI", c("sim1", "sim2", "sim3")))
+  )
+  
+  add_calls <- 0L
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  
+  testthat::local_mocked_bindings(
+    internal_dslite_included_packages = function(...) c("dsBase", "DSI"),
+    add_dsPackage = function(package, client = NULL, ...){
+      add_calls <<- add_calls + 1L
+      invisible(TRUE)
+    }
+  )
+  res <- NULL
+  testthat::expect_invisible(res <- dsAnalysis::sync_dsPackages(conns = setup$conns, install = TRUE))
+  testthat::expect_equal(add_calls, 0L)
+  testthat::expect_equal(res$package, "DSI")
+  testthat::expect_equal(res$installed, installed_version)
+})
+
+test_that("sync_dsPackages with install = TRUE uses the catalogue client names when a catalogue is available", {
+  setup <- local_cnsim_project()
+  
+  installed_version <- as.character(utils::packageVersion("DSI"))
+  
+  dir.create(file.path(setup$project, "utils", "setup"), recursive = TRUE, showWarnings = FALSE)
+  writeLines("# DSLite setup file", file.path(setup$project, "utils", "setup", "01_DSLite_Setup.R"))
+  
+  testhat_status <- list(
+    package_status = matrix(rep(TRUE, 3), nrow = 1,
+                            dimnames = list("DSI", c("sim1", "sim2", "sim3"))),
+    version_status = matrix(rep(installed_version, 3), nrow = 1,
+                            dimnames = list("DSI", c("sim1", "sim2", "sim3")))
+  )
+  
+  added <- NULL
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  
+  testthat::local_mocked_bindings(
+    internal_dslite_included_packages = function(...) character(0),
+    internal_ds_catalogue = function(...) data.frame(server = "DSI", client = "DSIFancyClient"),
+    internal_catalogue_client = function(package, catalogue, ...) "DSIFancyClient",
+    add_dsPackage = function(package, client = NULL, ...){
+      added <<- list(package = package, client = client)
+      invisible(TRUE)
+    }
+  )
+  res <- NULL
+  testthat::expect_invisible(res <- dsAnalysis::sync_dsPackages(conns = setup$conns, install = TRUE))
+  testthat::expect_equal(added$package, "DSI")
+  testthat::expect_equal(added$client, "DSIFancyClient")
+  testthat::expect_equal(nrow(res), 1L)
+})
+
+test_that("sync_dsPackages picks the lowest version by numeric order, not alphabetically, when server versions differ in digit length", {
+  setup <- local_cnsim_project()
+  
+  testhat_status <- list(
+    package_status = matrix(rep(TRUE, 3), nrow = 1,
+                            dimnames = list("dsBase", c("sim1", "sim2", "sim3"))),
+    version_status = matrix(c("6.10.0", "6.9.0", "6.10.0"), nrow = 1,
+                            dimnames = list("dsBase", c("sim1", "sim2", "sim3")))
+  )
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  res <- NULL
+  suppressMessages(res <- dsAnalysis::sync_dsPackages(conns = setup$conns, install = FALSE))
+  testthat::expect_equal(res$version, "6.9.0")
+  testthat::expect_equal(res$versions, "6.10.0, 6.9.0")
+  testthat::expect_equal(res$servers, "sim1, sim2, sim3")
+})
+
+test_that("sync_dsPackages with install = FALSE does not install anything even when packages are missing", {
+  setup <- local_cnsim_project()
+  
+  testhat_status <- list(
+    package_status = matrix(rep(TRUE, 3), nrow = 1,
+                            dimnames = list("dsNotInstalled", c("sim1", "sim2", "sim3"))),
+    version_status = matrix(rep("1.0.0", 3), nrow = 1,
+                            dimnames = list("dsNotInstalled", c("sim1", "sim2", "sim3")))
+  )
+  
+  install_calls <- 0L
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  
+  testthat::local_mocked_bindings(
+    install_dsPackage = function(package, version = NULL, ...){
+      install_calls <<- install_calls + 1L
+      invisible(TRUE)
+    }
+  )
+  res <- NULL
+  suppressMessages(res <- dsAnalysis::sync_dsPackages(conns = setup$conns, install = FALSE))
+  testthat::expect_equal(install_calls, 0L)
+  testthat::expect_true(is.na(res$installed))
+  testthat::expect_equal(res$package, "dsNotInstalled")
+})
+
+test_that("sync_dsPackages reports a package that is on only one server with that server's version", {
+  setup <- local_cnsim_project()
+  
+  testhat_status <- list(
+    package_status = matrix(c(FALSE, TRUE, FALSE), nrow = 1,
+                            dimnames = list("dsOnlyOne", c("sim1", "sim2", "sim3"))),
+    version_status = matrix(c(NA, "2.5.0", NA), nrow = 1,
+                            dimnames = list("dsOnlyOne", c("sim1", "sim2", "sim3")))
+  )
+  
+  testthat::local_mocked_bindings(
+    datashield.profiles = function(...) list(current = data.frame(profile = rep("default", 3),
+                                                                 row.names = c("sim1", "sim2", "sim3"))),
+    datashield.pkg_status = function(...) testhat_status,
+    .package = "DSI"
+  )
+  msgs <- testthat::capture_messages(dsAnalysis::sync_dsPackages(conns = setup$conns, install = FALSE))
+  testthat::expect_true(any(grepl("dsOnlyOne is only on sim2.", msgs, fixed = TRUE)))
+  res <- NULL
+  suppressMessages(res <- dsAnalysis::sync_dsPackages(conns = setup$conns, install = FALSE))
+  testthat::expect_equal(res$servers, "sim2")
+  testthat::expect_equal(res$version, "2.5.0")
+  testthat::expect_equal(res$versions, "2.5.0")
+})

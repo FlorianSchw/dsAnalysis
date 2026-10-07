@@ -30,3 +30,30 @@ test_that("internal_catalogue_name returns NA_character_ for NA and for an empty
   testthat::expect_identical(dsAnalysis:::internal_catalogue_name(NA_character_, catalogue), NA_character_)
   testthat::expect_identical(dsAnalysis:::internal_catalogue_name("", catalogue), NA_character_)
 })
+
+test_that("internal_catalogue_name works with a character vector catalogue carrying names and returns the stored spelling", {
+  catalogue <- c(dsBase = "a", dsSurvival = "b")
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("DSSURVIVAL", catalogue), "dsSurvival")
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("dsbase", catalogue), "dsBase")
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("dsMediation", catalogue), NA_character_)
+})
+
+test_that("internal_catalogue_name returns NA_character_ when the catalogue has no names at all", {
+  catalogue <- list(list(input = list(cran_link = "")), list(input = list(cran_link = "")))
+  testthat::expect_null(names(catalogue))
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("dsBase", catalogue), NA_character_)
+})
+
+test_that("internal_catalogue_name returns NA_character_ for a name that is only a partial match of a catalogue entry", {
+  catalogue <- list(dsBaseClient = list(input = list(cran_link = "")))
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("dsBase", catalogue), NA_character_)
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("dsBaseClientExtra", catalogue), NA_character_)
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("dsBaseClient", catalogue), "dsBaseClient")
+})
+
+test_that("internal_catalogue_name returns NA_character_ when a catalogue entry has an empty name and the package is the empty string", {
+  catalogue <- stats::setNames(list(list(input = list(id = 1)), list(input = list(id = 2))), c("", "dsBase"))
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("", catalogue), "")
+  testthat::expect_identical(dsAnalysis:::internal_catalogue_name("dsBase", catalogue), "dsBase")
+  testthat::expect_length(catalogue, 2L)
+})

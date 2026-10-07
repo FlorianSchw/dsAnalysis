@@ -365,3 +365,118 @@ test_that("check_project returns the unsynchronized comparison invisibly", {
   testthat::expect_identical(vis$value, sync_bad)
   testthat::expect_equal(length(msgs), 1L)
 })
+
+test_that("check_project passes the here::here() project path to internal_renv_compare", {
+  tmp_proj <- withr::local_tempdir("renv-project-arg-")
+  writeLines("{}", file.path(tmp_proj, "renv.lock"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  seen <- new.env(parent = emptyenv())
+  seen$project <- NULL
+  sync_ok <- list(synchronized = TRUE, recorded = character(0), used_not_installed = character(0),
+                  recorded_not_installed = character(0), used_not_recorded = character(0),
+                  other_version = character(0), unexplained = FALSE)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) {
+    seen$project <- project
+    sync_ok
+  })
+  testthat::expect_message(dsAnalysis::check_project(fix = "none"),
+                           "All good: the installed packages match renv.lock.", fixed = TRUE)
+  testthat::expect_identical(seen$project, tmp_proj)
+})
+
+test_that("check_project(fix = NULL) in a non-interactive session shows no menu, calls no renv action and returns the unsynchronized comparison", {
+  tmp_proj <- withr::local_tempdir("renv-fix-null-")
+  writeLines("{}", file.path(tmp_proj, "renv.lock"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  counters <- new.env(parent = emptyenv())
+  counters$menu <- 0L
+  counters$restore <- 0L
+  counters$snapshot <- 0L
+  sync_bad <- list(synchronized = FALSE, recorded = character(0), used_not_installed = character(0),
+                   recorded_not_installed = character(0), used_not_recorded = "stringr",
+                   other_version = character(0), unexplained = FALSE)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) sync_bad)
+  testthat::local_mocked_bindings(menu = function(choices, title = NULL, ...) {
+    counters$menu <- counters$menu + 1L
+    3L
+  }, .package = "utils")
+  testthat::local_mocked_bindings(restore = function(...) counters$restore <- counters$restore + 1L,
+                                  snapshot = function(...) counters$snapshot <- counters$snapshot + 1L,
+                                  .package = "renv")
+  msgs <- testthat::capture_messages(res <- dsAnalysis::check_project())
+  testthat::expect_false(interactive())
+  testthat::expect_equal(counters$menu, 0L)
+  testthat::expect_equal(counters$restore, 0L)
+  testthat::expect_equal(counters$snapshot, 0L)
+  testthat::expect_equal(length(msgs), 1L)
+  testthat::expect_true(grepl("Used by the project but not recorded in renv.lock: stringr.", msgs[1], fixed = TRUE))
+  testthat::expect_identical(res, sync_bad)
+})
+
+test_that("check_project(fix = \"restore\") does not route renv::restore through internal_renv_quietly and leaves renv.lock untouched", {
+  tmp_proj <- withr::local_tempdir("renv-restore-loud-")
+  writeLines("{}", file.path(tmp_proj, "renv.lock"))
+  lock_before <- readLines(file.path(tmp_proj, "renv.lock"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  state <- new.env(parent = emptyenv())
+  state$quietly <- 0L
+  state$restore <- 0L
+  state$snapshot <- 0L
+  sync_bad <- list(synchronized = FALSE, recorded = "jsonlite", used_not_installed = character(0),
+                   recorded_not_installed = "jsonlite", used_not_recorded = character(0),
+                   other_version = character(0), unexplained = FALSE)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) sync_bad,
+                                  internal_renv_quietly = function(expr) {
+                                    state$quietly <- state$quietly + 1L
+                                    invisible(expr)
+                                  })
+  testthat::local_mocked_bindings(restore = function(project, prompt, ...) {
+                                    state$restore <- state$restore + 1L
+                                    invisible(TRUE)
+                                  },
+                                  snapshot = function(...) state$snapshot <- state$snapshot + 1L,
+                                  .package = "renv")
+  msgs <- testthat::capture_messages(res <- dsAnalysis::check_project(fix = "restore"))
+  testthat::expect_equal(state$restore, 1L)
+  testthat::expect_equal(state$quietly, 0L)
+  testthat::expect_equal(state$snapshot, 0L)
+  testthat::expect_true(any(grepl("Still not in sync. Run check_project() again to see what is left.", msgs, fixed = TRUE)))
+  testthat::expect_identical(readLines(file.path(tmp_proj, "renv.lock")), lock_before)
+  testthat::expect_identical(res, sync_bad)
+})
+
+test_that("check_project lists all difference categories in the order used-not-installed, recorded-not-installed, used-not-recorded, other-version", {
+  tmp_proj <- withr::local_tempdir("renv-order-")
+  writeLines("{}", file.path(tmp_proj, "renv.lock"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  sync_bad <- list(synchronized = FALSE,
+                   recorded = c("dplyr", "jsonlite", "glue"),
+                   used_not_installed = c("dplyr", "dsBaseClient"),
+                   recorded_not_installed = "jsonlite",
+                   used_not_recorded = "stringr",
+                   other_version = "glue",
+                   unexplained = FALSE)
+  testthat::local_mocked_bindings(internal_renv_compare = function(project) sync_bad)
+  msgs <- testthat::capture_messages(res <- dsAnalysis::check_project(fix = "none"))
+  testthat::expect_equal(length(msgs), 6L)
+  testthat::expect_true(grepl("Used by the project but not installed: dplyr, dsBaseClient.", msgs[1], fixed = TRUE))
+  testthat::expect_true(grepl("renv::restore() installs dplyr in the versions recorded in renv.lock.", msgs[2], fixed = TRUE))
+  testthat::expect_true(grepl("dsBaseClient must be installed first", msgs[3], fixed = TRUE))
+  testthat::expect_true(grepl("Recorded in renv.lock but not installed: jsonlite.", msgs[4], fixed = TRUE))
+  testthat::expect_true(grepl("Used by the project but not recorded in renv.lock: stringr.", msgs[5], fixed = TRUE))
+  testthat::expect_true(grepl("Installed in another version than recorded in renv.lock: glue.", msgs[6], fixed = TRUE))
+  testthat::expect_identical(res, sync_bad)
+})
+
+test_that("check_project treats a directory containing only an renv folder but no renv.lock as nothing to check", {
+  tmp_proj <- withr::local_tempdir("renv-folder-only-")
+  dir.create(file.path(tmp_proj, "renv"))
+  writeLines("x <- 1", file.path(tmp_proj, "renv", "activate.R"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  testthat::expect_true(dir.exists(file.path(tmp_proj, "renv")))
+  testthat::expect_false(file.exists(file.path(tmp_proj, "renv.lock")))
+  msgs <- testthat::capture_messages(res <- dsAnalysis::check_project(fix = "restore"))
+  testthat::expect_equal(length(msgs), 1L)
+  testthat::expect_true(grepl("This project doesn't use renv (no renv.lock), so there is nothing to check.", msgs[1], fixed = TRUE))
+  testthat::expect_null(res)
+})

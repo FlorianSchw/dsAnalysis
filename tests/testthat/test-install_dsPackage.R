@@ -121,3 +121,76 @@ test_that("install_dsPackage installs the given version of a single package with
   testthat::expect_equal(res$server$package, "dsSurvival")
   testthat::expect_true(any(grepl("1.0.0", seen$specs, fixed = TRUE)))
 })
+
+test_that("install_dsPackage with an explicit client name resolves that client and passes two specs to renv::install", {
+  tmp_proj <- withr::local_tempdir("dslite-install-clientname-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"), to = file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  seen <- new.env()
+  seen$specs <- NULL
+  testthat::local_mocked_bindings(install = function(packages, project = NULL, prompt = TRUE, ...) { seen$specs <- packages; invisible(packages) }, .package = "renv")
+  testthat::local_mocked_bindings(internal_renv_record = function(project) invisible(project))
+  res <- suppressMessages(dsAnalysis::install_dsPackage(dsPackage = "dsSurvival", client = "dsSurvivalClient"))
+  testthat::expect_equal(res$server$package, "dsSurvival")
+  testthat::expect_equal(res$client$package, "dsSurvivalClient")
+  testthat::expect_equal(length(seen$specs), 2L)
+  testthat::expect_equal(seen$specs, c(res$server$spec, res$client$spec))
+})
+
+test_that("install_dsPackage with ref builds a GitHub spec containing the given ref", {
+  tmp_proj <- withr::local_tempdir("dslite-install-ref-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"), to = file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  seen <- new.env()
+  seen$specs <- NULL
+  testthat::local_mocked_bindings(install = function(packages, project = NULL, prompt = TRUE, ...) { seen$specs <- packages; invisible(packages) }, .package = "renv")
+  testthat::local_mocked_bindings(internal_renv_record = function(project) invisible(project))
+  res <- suppressMessages(dsAnalysis::install_dsPackage(dsPackage = "dsSurvival", ref = "master"))
+  testthat::expect_equal(res$server$package, "dsSurvival")
+  testthat::expect_true(any(grepl("master", seen$specs, fixed = TRUE)))
+  testthat::expect_true(grepl("dsSurvival", res$server$spec, fixed = TRUE))
+})
+
+test_that("install_dsPackage adds the server and client package to dependencies.R via add_dsPackage", {
+  tmp_proj <- withr::local_tempdir("dslite-install-deps-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"), to = file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  testthat::local_mocked_bindings(install = function(packages, project = NULL, prompt = TRUE, ...) invisible(packages), .package = "renv")
+  seen <- new.env()
+  seen$server <- NULL
+  seen$client <- NULL
+  seen$n <- 0L
+  testthat::local_mocked_bindings(add_dsPackage = function(dsPackage, client = NA_character_, ...) { seen$server <- dsPackage; seen$client <- client; seen$n <- seen$n + 1L; invisible(dsPackage) })
+  testthat::local_mocked_bindings(internal_renv_record = function(project) invisible(project))
+  suppressMessages(dsAnalysis::install_dsPackage(dsPackage = "dsSurvival"))
+  testthat::expect_equal(seen$n, 1L)
+  testthat::expect_equal(seen$server, "dsSurvival")
+  testthat::expect_equal(seen$client, "dsSurvivalClient")
+})
+
+test_that("install_dsPackage installing two packages calls renv::install twice, once per package, and add_dsPackage for each", {
+  tmp_proj <- withr::local_tempdir("dslite-install-multi2-")
+  dir.create(file.path(tmp_proj, "utils", "setup"), recursive = TRUE)
+  file.copy(from = internal_find_script("dslite/01_DSLite_Setup.R"), to = file.path(tmp_proj, "utils", "setup", "01_DSLite_Setup.R"))
+  testthat::local_mocked_bindings(here = function(...) file.path(tmp_proj, ...), .package = "here")
+  calls <- new.env()
+  calls$n <- 0L
+  testthat::local_mocked_bindings(install = function(packages, project = NULL, prompt = TRUE, ...) { calls$n <- calls$n + 1L; invisible(packages) }, .package = "renv")
+  calls$added <- character(0)
+  testthat::local_mocked_bindings(add_dsPackage = function(dsPackage, client = NA_character_, ...) { calls$added <- c(calls$added, dsPackage); invisible(dsPackage) })
+  testthat::local_mocked_bindings(internal_renv_record = function(project) invisible(project))
+  res <- suppressMessages(dsAnalysis::install_dsPackage(dsPackage = c("dsBase", "dsSurvival")))
+  testthat::expect_equal(res, c("dsBase", "dsSurvival"))
+  testthat::expect_equal(calls$n, 2L)
+  testthat::expect_equal(calls$added, c("dsBase", "dsSurvival"))
+})
+
+test_that("install_dsPackage errors when source options are given together with several packages", {
+  err <- testthat::expect_error(dsAnalysis::install_dsPackage(dsPackage = c("dsBase", "dsSurvival"), source = "github"))
+  testthat::expect_equal(err$message, "Versions, refs, sources and clients can only be given for one package at a time.")
+  err2 <- testthat::expect_error(dsAnalysis::install_dsPackage(dsPackage = c("dsBase", "dsSurvival"), client_version = "1.0.0"))
+  testthat::expect_equal(err2$message, "Versions, refs, sources and clients can only be given for one package at a time.")
+})
