@@ -1,5 +1,13 @@
 #### the renv::install() specification of one package
 #### src: list(cran, repo) from internal_catalogue_source() or a user's "owner/repo"
+#' @title Build a remotes-style install specification string
+#' @description Resolves a package name, source, version and/or ref into a single string suitable for remotes::install_* functions. Chooses between CRAN and GitHub forms and looks up GitHub tags when needed.
+#' @details This is a local, offline-except-for-GitHub-API-calls helper used while assembling install instructions for a package; it does not install anything or write any files itself. When a GitHub repo is known and no explicit ref or version is given, it queries GitHub tags (via internal_github_tags) to find the latest release tag, falling back to the repository's default branch if no release tags exist or the lookup fails. It signals an error with rlang-free base `stop()` (call. = FALSE) when a ref or version is requested but no GitHub repository is available, or when the requested version cannot be found among GitHub tags.
+#' @param package Name of the package, as a plain string, used in messages and as the CRAN install spec.
+#' @param src A local list describing where the package comes from, with a logical `cran` element and a `repo` element giving the "owner/repo" GitHub location (or NA if none is known); this is not an object on any DataSHIELD server.
+#' @param version Optional version string to install; if NULL, the latest CRAN version or the latest GitHub release tag (else the default branch) is used.
+#' @param ref Optional GitHub ref (branch, commit, or tag) to install; if given, `src$repo` must be a known GitHub repository and the ref is used as-is without checking it exists.
+#' @return A single character string: the package name (optionally with "@version") for CRAN packages, or "owner/repo" optionally with "@ref"/"@tag" for GitHub packages, suitable for passing to remotes::install_version or remotes::install_github. The function has no side effects on disk.
 internal_install_spec <- function(package, src, version = NULL, ref = NULL){
 
   if(!is.null(ref)){

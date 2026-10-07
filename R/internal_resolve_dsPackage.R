@@ -1,5 +1,16 @@
 #### what to install for a DataSHIELD package: the server and the client package,
 #### each with its name and renv::install() specification (client is NULL if there is none)
+#' @title Resolve install specs for a DataSHIELD server/client package pair
+#' @description Looks up a DataSHIELD server package (and its matching client package, if any) in the package catalogue and builds the information needed to install each, including source and version.
+#' @details Loads the DataSHIELD package catalogue (via internal_ds_catalogue()) to find the canonical name and source of dsPackage and, unless given explicitly, of its matching client package. If dsPackage is not in the catalogue and no source is given, it stops with an error; if no client package can be identified, it emits a message and returns only the server spec. When client_version is not given but version is, it tries to reuse version for the client and falls back to the latest client version with a message if that version is not available for the client. This function has no side effects on disk; it only performs lookups and returns specifications used elsewhere to drive package installation.
+#' @param dsPackage Name of the DataSHIELD server-side package to resolve, as known in the DataSHIELD package catalogue or as a plain package name if source is given.
+#' @param version Desired released version of the server package; if NULL, the latest version is used.
+#' @param ref Desired git branch, tag, or commit of the server package when installing from a repository rather than CRAN; if NULL, the default branch is used.
+#' @param source Optional override for where to install the server package from, e.g. "owner/repo" for GitHub; if NULL, the source is looked up in the catalogue.
+#' @param client Name of the client package matching dsPackage; if NULL, it is looked up in the catalogue, and if none is found only the server package is resolved.
+#' @param client_version Desired released version of the client package; if NULL, it defaults to version (if given and available for the client) or otherwise the latest version.
+#' @param client_source Optional override for where to install the client package from, e.g. "owner/repo"; if NULL, it is looked up in the catalogue or inferred from the server package's repository owner.
+#' @return A list with elements server and (if found) client, each a list with package (the resolved package name) and spec (the install specification, e.g. source and version/ref, as produced by internal_install_spec); client is NULL if no client package could be identified.
 internal_resolve_dsPackage <- function(dsPackage, version = NULL, ref = NULL, source = NULL,
                               client = NULL, client_version = NULL, client_source = NULL){
 
